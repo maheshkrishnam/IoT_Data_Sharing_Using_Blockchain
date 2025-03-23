@@ -63,7 +63,7 @@ folder_structure = {
                 "index.js": None,
                 "upload.js": None,
                 "dataset": {
-                    "[id].js": None,  # Handle dynamic route file
+                    "[id].js": None,
                 },
                 "profile.js": None,
                 "transactions.js": None,
