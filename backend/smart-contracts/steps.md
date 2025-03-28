@@ -1,68 +1,217 @@
-# Hardhat Deployment and Testing Guide
-
-This guide will walk you through the process of deploying and testing your smart contract using Hardhat. Follow the steps below to compile, deploy, interact with your contract, and run tests.
-
----
-
-## Step 1: **Compile the Smart Contract**
-Before deploying your contract, you need to compile it to ensure that it's ready for deployment.
-```bash
-npx hardhat compile
-```
-
----
-
-## Step 2: **Start a Local Hardhat Node**
-Start a local Ethereum node using Hardhat. This node will simulate the Ethereum blockchain, allowing you to deploy and interact with your contract in a local environment.
+# Steps:
+## Make a node on hardhat:
 ```bash
 npx hardhat node
 ```
 
----
-
-## Step 3: **Deploy the Contract**
-Once your local network is running, deploy your smart contract using the deployment script provided in your project.
+## Compile and Deploy smart contracts + run hardhat console:
 ```bash
+npx hardhat clean
+npx hardhat compile
 npx hardhat run scripts/deploy.js --network localhost
-```
-
----
-
-## Step 4: **Interact with the Deployed Contract via Hardhat Console**
-Now that your contract is deployed, open the Hardhat console to interact with it directly on the local network. This will allow you to execute functions and interact with your contract in real-time.
-```bash
 npx hardhat console --network localhost
 ```
 
----
-
-## Step 5: **Attach to Your Deployed Contract**
-In the console, attach to the deployed contract by specifying its address and contract name. This gives you access to the contract's functions and variables.
+## Get Contract Instances:
 ```bash
-const IoTDataNFT = await hre.ethers.getContractFactory("ContractName");
-const iotDataNFT = await IoTDataNFT.attach("YourContractAddress");
+const [deployer, user1, user2] = await ethers.getSigners();
+
+const Payment = await ethers.getContractAt("Payment", "deployedContractAddress");
+const IoTDataNFT = await ethers.getContractAt("IoTDataNFT", "deployedContractAddress");
+const Marketplace = await ethers.getContractAt("Marketplace", "deployedContractAddress");
+const AccessControl = await ethers.getContractAt("IoTDataAccessControl", "deployedContractAddress");
+const DataVerification = await ethers.getContractAt("DataVerification", "deployedContractAddress");
+const IoTDataFactory = await ethers.getContractAt("IoTDataFactory", "deployedContractAddress");
+```
+```bash
+const [deployer, user1, user2, user3] = await ethers.getSigners();
+
+const Payment = await ethers.getContractAt("Payment", "0x5FbDB2315678afecb367f032d93F642f64180aa3");
+const IoTDataNFT = await ethers.getContractAt("IoTDataNFT", "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512");
+const Marketplace = await ethers.getContractAt("Marketplace", "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
+const AccessControl = await ethers.getContractAt("IoTDataAccessControl", "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9");
+const DataVerification = await ethers.getContractAt("DataVerification", "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9");
+const IoTDataFactory = await ethers.getContractAt("IoTDataFactory", "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707");
+const dataFactory = IoTDataFactory.connect(user1);
 ```
 
----
-
-## Step 6: **Mint a New Dataset**
-With your contract attached, use its `mintDataset` function (or any other available function) to mint a new dataset. Provide the required parameters, such as the recipient address and metadata URL.
+## To print each value:
 ```bash
-await iotDataNFT.mintDataset("RecipientAddress", "https://example.com/metadata.json");
+console.log("deployer: ", deployer);
+console.log("user1: ", user1);
+console.log("user2: ", user2);
+console.log("user3: ", user3);
+console.log("Payment: ", Payment);
+console.log("IoTDataNFT: ", IoTDataNFT);
+console.log("Marketplace: ", Marketplace);
+console.log("AccessControl: ", AccessControl);
+console.log("DataVerification: ", DataVerification);
+console.log("IoTDataFactory: ", IoTDataFactory);
 ```
 
----
-
-## Step 7: **Run Tests**
-To ensure everything is functioning as expected, run your test suite. This will check that your contract performs the desired actions correctly.
+## IoT access control:
+### Grant device role:
 ```bash
-npx hardhat test
+await AccessControl.grantDeviceRole(DEVICE_ADDRESS);
+await AccessControl.isDevice(userAddress);
+```
+```bash
+await AccessControl.grantDeviceRole(user1.address);
+await AccessControl.isDevice(user1.address);
 ```
 
----
+### Grant verify role:
+```bash
+await AccessControl.grantVerifierRole(VERIFIER_ADDRESS);
+await AccessControl.isVerifier(userAddress);
+```
+```bash
+await AccessControl.grantVerifierRole(user2.address);
+await AccessControl.isVerifier(user2.address);
+```
 
-### Notes:
-- Be sure to replace the placeholders such as `ContractName`, `YourContractAddress`, `RecipientAddress`, and metadata URL with actual values during execution.
-- Test your contract thoroughly before moving to production.
+### Grant data buyer role:
+```bash
+await AccessControl.grantDataBuyerRole(VERIFIER_ADDRESS);
+await AccessControl.isDataBuyer(userAddress);
+```
+```bash
+await AccessControl.grantDataBuyerRole(user3.address);
+await AccessControl.isDataBuyer(user3.address);
+```
 
----
+## Create a data template (Admin only):
+```bash
+await IoTDataFactory.createTemplate("TEMPLATE_NAME", "DATA_FORMAT", COST);
+```
+```bash
+await IoTDataFactory.createTemplate("temperature", "{sensor_id}-{location}", 100);
+```
+
+## Generate an IoT Data NFT (Device only):
+```bash
+const tx = await IoTDataFactory.connect(user1).generateDataNFT("DEVICE_ID", "DATA_TYPE", "LOCATION", "METADATA");
+```
+```bash
+const tx = await dataFactory.generateDataNFT("sensor123", "temperature", "NYC", JSON.stringify({value: 23.5}));
+const receipt = await tx.wait();
+const event = receipt.logs.find(log => log.fragment && log.fragment.name === "DataNFTGenerated");
+const tokenId = event.args[0];
+console.log("Generated NFT Token ID:", tokenId.toString());
+```
+
+## IoTDataNFT:
+### Check NFT owner:
+```bash
+await IoTDataNFT.ownerOf(TOKEN_ID);
+```
+```bash
+await IoTDataNFT.ownerOf(0);
+```
+
+### Get data of NFT:
+```bash
+await IoTDataNFT.tokenURI(TOKEN_ID);
+await IoTDataNFT.accessData(TOKEN_ID);
+```
+```bash
+await IoTDataNFT.tokenURI(0);
+await IoTDataNFT.accessData(0); // not defined yet
+```
+
+## DataVerification:
+### Verify a data NFT (only verifiers can call this):
+- SCORE -> PENDING: 0, APPROVED: 1, REJECTED: 2
+```bash
+await DataVerification.connect(user2).verifyData(TOKEN_ID, SCORE, "COMMENT");
+```
+```bash
+await DataVerification.connect(user2).verifyData(0, 1, "Verified Successfully");
+```
+
+### Verication status of token:
+```bash
+await DataVerification.getVerificationStatus(TOKEN_ID);
+```
+```bash
+await DataVerification.getVerificationStatus(0);
+```
+
+## Marketplace:
+### Approve an NFT
+```bash
+await IoTDataNFT.connect(user1).approve(Marketplace.target, TOKEN_ID);
+```
+```bash
+const NFT_ADDRESS = await IoTDataNFT.ownerOf(0);
+const nftContract = await ethers.getContractAt("IoTDataNFT", NFT_ADDRESS);
+const approveTx = await nftContract.connect(user1).approve(Marketplace.target, 0);
+await approveTx.wait();
+console.log("Approved Marketplace for token 0");
+```
+
+### List an NFT for sale:
+```bash
+const listTx = await Marketplace.connect(user1).listItem(nftContract.target, TOKEN_ID, ethers.parseEther("PRICE_IN_ETH"));
+await listTx.wait();
+console.log("listTx:" listTx);
+```
+```bash
+const listTx = await Marketplace.connect(user1).listItem(nftContract.target, 0, ethers.parseEther("0.001"));
+await listTx.wait();
+console.log("listTx:" listTx);
+```
+
+### Buy an NFT:
+```bash
+await Marketplace.connect(user2).buyItem("0xNFT_CONTRACT_ADDRESS", TOKEN_ID, { value: ethers.parseEther("PRICE_IN_ETH") });
+```
+
+
+### Check NFT is still listed:
+```bash
+const listing = await Marketplace.getNFTListing("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
+console.log(listing);
+```
+```bash
+const listing = await Marketplace.getNFTListing(NFT_ADDRESS, 1);
+console.log(listing);
+```
+
+### Cancel a listing:
+```bash
+await Marketplace.cancelListing("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
+```
+
+### Relisting:
+```bash
+const tx = await Marketplace.resellItem(0xNFT_CONTRACT_ADDRESS, TOKEN_ID, { value: ethers.parseEther("AMOUNT_IN_ETH") });
+await tx.wait();
+console.log("NFT relisted successfully!");
+```
+
+### Rate user:
+```bash
+const rateUser = await Marketplace.rateUser(userAddress, rate);
+await rateUser.wait();
+console.log("User rated successfully!");
+```
+```bash
+const rateUser = await Marketplace.rateUser(user1.address, 10);
+await rateUser.wait();
+console.log("User rated successfully!");
+```
+
+### Get user rating:
+```bash
+const rating = await Marketplace.getUserRating(userAddress);
+console.log(`User rating: ${rating}`);
+```
+
+## Payment:
+### Send payment to the seller:
+```bash
+await Payment.connect(user2).processPayment(SELLER_ADDRESS, { value: ethers.parseEther("AMOUNT_IN_ETH") });
+```
+steps.md
+Displaying steps.md.

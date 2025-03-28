@@ -4,59 +4,75 @@ async function main() {
   console.log("🚀 Starting deployment...");
 
   const [deployer] = await hre.ethers.getSigners();
-  console.log(`👷 Deploying contracts with account: ${deployer.address}`);
+  console.log(`👷 Deployer account: ${deployer.address}`);
 
-  // Deploy Payment contract first
+  // Deploy Payment Contract
   const Payment = await hre.ethers.getContractFactory("Payment");
-  const payment = await Payment.deploy(1, deployer.address);
+  const payment = await Payment.deploy(5, deployer.address); // 5% platform fee
   await payment.waitForDeployment();
-  console.log(`✅ Payment contract deployed at: ${await payment.getAddress()}`);
+  console.log(`✅ Payment deployed to: ${payment.target}`);
 
-  // Deploy IoTDataNFT (assuming it needs an admin address)
+  // Deploy IoTDataNFT
   const IoTDataNFT = await hre.ethers.getContractFactory("IoTDataNFT");
   const iotDataNFT = await IoTDataNFT.deploy(deployer.address);
   await iotDataNFT.waitForDeployment();
-  console.log(`✅ IoTDataNFT deployed at: ${await iotDataNFT.getAddress()}`);
+  console.log(`✅ IoTDataNFT deployed to: ${iotDataNFT.target}`);
 
-  // Deploy Marketplace (✅ FIXED: Uses only payment contract address)
+  // Deploy Marketplace
   const Marketplace = await hre.ethers.getContractFactory("Marketplace");
-  const marketplace = await Marketplace.deploy(await payment.getAddress());
+  const marketplace = await Marketplace.deploy(payment.target);
   await marketplace.waitForDeployment();
-  console.log(`✅ Marketplace deployed at: ${await marketplace.getAddress()}`);
+  console.log(`✅ Marketplace deployed to: ${marketplace.target}`);
 
-  // Deploy AccessControl first (needed for DataVerification)
+  // Deploy AccessControl
   const AccessControl = await hre.ethers.getContractFactory("IoTDataAccessControl");
   const accessControl = await AccessControl.deploy();
   await accessControl.waitForDeployment();
-  console.log(`✅ AccessControl deployed at: ${await accessControl.getAddress()}`);
+  console.log(`✅ AccessControl deployed to: ${accessControl.target}`);
 
-  // Deploy DataVerification contract
+  // Deploy DataVerification
   const DataVerification = await hre.ethers.getContractFactory("DataVerification");
-  const dataVerification = await DataVerification.deploy(await accessControl.getAddress());
+  const dataVerification = await DataVerification.deploy(accessControl.target);
   await dataVerification.waitForDeployment();
-  console.log(`✅ DataVerification deployed at: ${await dataVerification.getAddress()}`);
+  console.log(`✅ DataVerification deployed to: ${dataVerification.target}`);
 
-  // Deploy IoTDataFactory (assuming it needs NFT contract & marketplace addresses)
+  // Deploy IoTDataFactory
   const IoTDataFactory = await hre.ethers.getContractFactory("IoTDataFactory");
   const dataFactory = await IoTDataFactory.deploy(
-      await iotDataNFT.getAddress(),
-      await accessControl.getAddress(),
-      await dataVerification.getAddress()
+    iotDataNFT.target,
+    accessControl.target,
+    dataVerification.target
   );
   await dataFactory.waitForDeployment();
-  console.log(`✅ IoTDataFactory deployed at: ${await dataFactory.getAddress()}`);
+  console.log(`✅ IoTDataFactory deployed to: ${dataFactory.target}`);
 
-  // Grant VERIFIER_ROLE to DataVerification contract
-  try {
-    const verifierRole = await iotDataNFT.VERIFIER_ROLE();
-    const tx = await iotDataNFT.grantRole(verifierRole, await dataVerification.getAddress());
-    await tx.wait();
-    console.log(`🔑 Granted VERIFIER_ROLE to DataVerification contract: ${await dataVerification.getAddress()}`);
-  } catch (error) {
-    console.error("❌ Error granting VERIFIER_ROLE:", error);
-  }
+  // Grant Roles
+  console.log("🔐 Setting up roles...");
+  
+  // 1. Grant MINTER_ROLE to IoTDataFactory
+  const minterRole = await iotDataNFT.MINTER_ROLE();
+  const grantMinterTx = await iotDataNFT.grantRole(minterRole, dataFactory.target);
+  await grantMinterTx.wait();
+  console.log("   ✅ MINTER_ROLE granted to IoTDataFactory");
 
-  console.log("🎉 Deployment successful!");
+  // 2. Grant VERIFIER_ROLE via AccessControl
+  const grantVerifierTx = await accessControl.grantVerifierRole(dataVerification.target);
+  await grantVerifierTx.wait();
+  console.log("   ✅ VERIFIER_ROLE granted to DataVerification");
+
+  // 3. Grant DEVICE_ROLE to deployer for testing
+  const grantDeviceTx = await accessControl.grantDeviceRole(deployer.address);
+  await grantDeviceTx.wait();
+  console.log("   ✅ DEVICE_ROLE granted to deployer");
+
+  console.log("🎉 All contracts deployed successfully!");
+  console.log("\n📜 Contract Addresses:");
+  console.log(`   Payment: ${payment.target}`);
+  console.log(`   IoTDataNFT: ${iotDataNFT.target}`);
+  console.log(`   Marketplace: ${marketplace.target}`);
+  console.log(`   AccessControl: ${accessControl.target}`);
+  console.log(`   DataVerification: ${dataVerification.target}`);
+  console.log(`   IoTDataFactory: ${dataFactory.target}`);
 }
 
 main().catch((error) => {
