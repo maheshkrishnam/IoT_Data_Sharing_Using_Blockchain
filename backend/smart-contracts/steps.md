@@ -106,17 +106,15 @@ console.log("Generated NFT Token ID:", tokenId.toString());
 await IoTDataNFT.ownerOf(TOKEN_ID);
 ```
 ```bash
-await IoTDataNFT.ownerOf(0);
+await IoTDataNFT.ownerOf(tokenId);
 ```
 
 ### Get data of NFT:
 ```bash
 await IoTDataNFT.tokenURI(TOKEN_ID);
-await IoTDataNFT.accessData(TOKEN_ID);
 ```
 ```bash
-await IoTDataNFT.tokenURI(0);
-await IoTDataNFT.accessData(0); // not defined yet
+await IoTDataNFT.tokenURI(tokenId);
 ```
 
 ## DataVerification:
@@ -126,7 +124,7 @@ await IoTDataNFT.accessData(0); // not defined yet
 await DataVerification.connect(user2).verifyData(TOKEN_ID, SCORE, "COMMENT");
 ```
 ```bash
-await DataVerification.connect(user2).verifyData(0, 1, "Verified Successfully");
+await DataVerification.connect(user2).verifyData(tokenId, 1, "Verified Successfully");
 ```
 
 ### Verication status of token:
@@ -134,7 +132,7 @@ await DataVerification.connect(user2).verifyData(0, 1, "Verified Successfully");
 await DataVerification.getVerificationStatus(TOKEN_ID);
 ```
 ```bash
-await DataVerification.getVerificationStatus(0);
+await DataVerification.getVerificationStatus(tokenId);
 ```
 
 ## Marketplace:
@@ -143,75 +141,58 @@ await DataVerification.getVerificationStatus(0);
 await IoTDataNFT.connect(user1).approve(Marketplace.target, TOKEN_ID);
 ```
 ```bash
-const NFT_ADDRESS = await IoTDataNFT.ownerOf(0);
-const nftContract = await ethers.getContractAt("IoTDataNFT", NFT_ADDRESS);
-const approveTx = await nftContract.connect(user1).approve(Marketplace.target, 0);
+const NFT_ADDRESS = await IoTDataNFT.ownerOf(tokenId);
+const nftContract = IoTDataNFT;
+const approveTx = await nftContract.connect(user1).approve(Marketplace.target, tokenId);
 await approveTx.wait();
-console.log("Approved Marketplace for token 0");
+const approvedAddress = await IoTDataNFT.getApproved(tokenId);
+console.log("Approved Address:", approvedAddress);
 ```
 
 ### List an NFT for sale:
 ```bash
 const listTx = await Marketplace.connect(user1).listItem(nftContract.target, TOKEN_ID, ethers.parseEther("PRICE_IN_ETH"));
 await listTx.wait();
-console.log("listTx:" listTx);
+console.log("listTx:", listTx);
 ```
 ```bash
-const listTx = await Marketplace.connect(user1).listItem(nftContract.target, 0, ethers.parseEther("0.001"));
+const listTx = await Marketplace.connect(user1).listItem(IoTDataNFT.target, tokenId, ethers.parseEther("0.001"));
 await listTx.wait();
-console.log("listTx:" listTx);
+const listing = await Marketplace.listings(IoTDataNFT.target, tokenId);
+console.log("listTx:", listTx);
 ```
 
 ### Buy an NFT:
 ```bash
-await Marketplace.connect(user2).buyItem("0xNFT_CONTRACT_ADDRESS", TOKEN_ID, { value: ethers.parseEther("PRICE_IN_ETH") });
+await Marketplace.connect(user3).buyItem("0xNFT_CONTRACT_ADDRESS", TOKEN_ID, { value: ethers.parseEther("PRICE_IN_ETH") });
 ```
-
+```
+await Marketplace.connect(user3).buyItem(IoTDataNFT.target, tokenId, { value: ethers.parseEther("0.001") });
+```
 
 ### Check NFT is still listed:
 ```bash
-const listing = await Marketplace.getNFTListing("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
+const listing = await Marketplace.listings("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
 console.log(listing);
 ```
 ```bash
-const listing = await Marketplace.getNFTListing(NFT_ADDRESS, 1);
+const listing = await Marketplace.connect(user1).listings(IoTDataNFT.target, tokenId);
 console.log(listing);
 ```
 
 ### Cancel a listing:
 ```bash
-await Marketplace.cancelListing("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
-```
-
-### Relisting:
-```bash
-const tx = await Marketplace.resellItem(0xNFT_CONTRACT_ADDRESS, TOKEN_ID, { value: ethers.parseEther("AMOUNT_IN_ETH") });
-await tx.wait();
-console.log("NFT relisted successfully!");
-```
-
-### Rate user:
-```bash
-const rateUser = await Marketplace.rateUser(userAddress, rate);
-await rateUser.wait();
-console.log("User rated successfully!");
+await Marketplace.connect(user1).cancelListing("0xNFT_CONTRACT_ADDRESS", TOKEN_ID);
 ```
 ```bash
-const rateUser = await Marketplace.rateUser(user1.address, 10);
-await rateUser.wait();
-console.log("User rated successfully!");
-```
-
-### Get user rating:
-```bash
-const rating = await Marketplace.getUserRating(userAddress);
-console.log(`User rating: ${rating}`);
+await Marketplace.connect(user1).cancelListing(IoTDataNFT.target, tokenId);
 ```
 
 ## Payment:
 ### Send payment to the seller:
 ```bash
-await Payment.connect(user2).processPayment(SELLER_ADDRESS, { value: ethers.parseEther("AMOUNT_IN_ETH") });
+await Payment.connect(user3).processPayment(SELLER_ADDRESS, { value: ethers.parseEther("AMOUNT_IN_ETH") });
 ```
-steps.md
-Displaying steps.md.
+```bash
+await Payment.connect(user3).processPayment(user1.address, { value: ethers.parseEther("0.001") });
+```
