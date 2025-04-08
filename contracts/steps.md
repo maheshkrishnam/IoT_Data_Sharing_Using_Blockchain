@@ -139,14 +139,22 @@ await DataVerification.getVerificationStatus(tokenId);
 ### Approve an NFT
 ```bash
 await IoTDataNFT.connect(user1).approve(Marketplace.target, TOKEN_ID);
+# OR
+await IoTDataNFT.connect(user1).setApprovalForAll(Marketplace.target, true);
 ```
 ```bash
 const NFT_ADDRESS = await IoTDataNFT.ownerOf(tokenId);
-const nftContract = IoTDataNFT;
-const approveTx = await nftContract.connect(user1).approve(Marketplace.target, tokenId);
+const approveTx = await IoTDataNFT.connect(user1).approve(Marketplace.target, tokenId);
 await approveTx.wait();
 const approvedAddress = await IoTDataNFT.getApproved(tokenId);
 console.log("Approved Address:", approvedAddress);
+
+# OR
+
+const approveTx = await IoTDataNFT.connect(user1).setApprovalForAll(Marketplace.target, true);
+await approveTx.wait();
+const isApproved = await IoTDataNFT.isApprovedForAll(user1.address, Marketplace.target);
+console.log("Marketplace is approved for all tokens:", isApproved);
 ```
 
 ### List an NFT for sale:
