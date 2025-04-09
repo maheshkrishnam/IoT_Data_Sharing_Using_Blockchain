@@ -2,65 +2,64 @@ const hre = require("hardhat");
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deployer:", deployer.address);
+  console.log("Deploying contracts with account:", deployer.address);
 
-  // Deploy IoTDataNFT
-  const IoTDataNFT = await hre.ethers.getContractFactory("IoTDataNFT");
-  const iotDataNFT = await IoTDataNFT.deploy(deployer.address);
-  await iotDataNFT.waitForDeployment();
-  console.log("IoTDataNFT:", iotDataNFT.target);
-
-  // Deploy AccessControl
-  const AccessControl = await hre.ethers.getContractFactory("IoTDataAccessControl");
-  const accessControl = await AccessControl.deploy();
+  const IoTDataAccessControl = await hre.ethers.getContractFactory("IoTDataAccessControl");
+  const accessControl = await IoTDataAccessControl.deploy();
   await accessControl.waitForDeployment();
-  console.log("AccessControl:", accessControl.target);
+  console.log("\nAccessControl deployed at:", await accessControl.getAddress());
 
-  // Deploy DataVerification
-  const DataVerification = await hre.ethers.getContractFactory("DataVerification");
-  const dataVerification = await DataVerification.deploy(accessControl.target);
-  await dataVerification.waitForDeployment();
-  console.log("DataVerification:", dataVerification.target);
-
-  // Link IoTDataNFT with DataVerification
-  await (await iotDataNFT.setDataVerificationContract(dataVerification.target)).wait();
-  console.log("IoTDataNFT linked to DataVerification");
-
-  // Link DataVerification with IoTDataNFT
-  await (await dataVerification.setNFTContract(iotDataNFT.target)).wait();
-  console.log("DataVerification linked to IoTDataNFT");
-
-  // Deploy Payment Contract
-  const Payment = await hre.ethers.getContractFactory("Payment");
-  const payment = await Payment.deploy(1, deployer.address);
-  await payment.waitForDeployment();
-  console.log("Payment:", payment.target);
-
-  // Deploy Marketplace
   const Marketplace = await hre.ethers.getContractFactory("Marketplace");
-  const marketplace = await Marketplace.deploy(payment.target);
+  const marketplace = await Marketplace.deploy(deployer.address);
   await marketplace.waitForDeployment();
-  console.log("Marketplace:", marketplace.target);
+  console.log("\nMarketplace deployed at:", await marketplace.getAddress());
 
-  // Deploy IoTDataFactory
+  const IoTDataNFT = await hre.ethers.getContractFactory("IoTDataNFT");
+  const nft = await IoTDataNFT.deploy(
+    await marketplace.getAddress(),
+    await accessControl.getAddress()
+  );
+  await nft.waitForDeployment();
+  console.log("\nIoTDataNFT deployed at:", await nft.getAddress());
+
+  const DataVerification = await hre.ethers.getContractFactory("DataVerification");
+  const verification = await DataVerification.deploy(await accessControl.getAddress());
+  await verification.waitForDeployment();
+  console.log("\nDataVerification deployed at:", await verification.getAddress());
+
+  const Payment = await hre.ethers.getContractFactory("Payment");
+  const payment = await Payment.deploy(1, await accessControl.getAddress());
+  await payment.waitForDeployment();
+  console.log("\nPayment deployed at:", await payment.getAddress());
+
   const IoTDataFactory = await hre.ethers.getContractFactory("IoTDataFactory");
-  const dataFactory = await IoTDataFactory.deploy(iotDataNFT.target, accessControl.target, dataVerification.target);
-  await dataFactory.waitForDeployment();
-  console.log("IoTDataFactory:", dataFactory.target);
+  const factory = await IoTDataFactory.deploy(
+    await nft.getAddress(),
+    await accessControl.getAddress(),
+    await verification.getAddress()
+  );
+  await factory.waitForDeployment();
+  console.log("\nIoTDataFactory deployed at:", await factory.getAddress());
 
-  // Grant Roles
-  const minterRole = await iotDataNFT.MINTER_ROLE();
-  await (await iotDataNFT.grantRole(minterRole, dataFactory.target)).wait();
-  console.log("MINTER_ROLE granted to IoTDataFactory");
+  console.log("\nSetting up roles...");
+  await accessControl.grantRole(await accessControl.DEFAULT_ADMIN_ROLE(), deployer.address);
+  await accessControl.grantRole(await accessControl.MINTER_ROLE(), await nft.getAddress());
+  await accessControl.grantRole(await accessControl.MINTER_ROLE(), await factory.getAddress());
+  await accessControl.grantRole(await accessControl.VERIFIER_ROLE(), await verification.getAddress());
+  await accessControl.grantRole(await accessControl.DEFAULT_ADMIN_ROLE(), await factory.getAddress());
 
-  await (await accessControl.grantVerifierRole(dataVerification.target)).wait();
-  console.log("VERIFIER_ROLE granted to DataVerification");
+  await verification.connect(deployer).setNFTContract(await nft.getAddress());
 
-  await (await accessControl.grantDeviceRole(deployer.address)).wait();
-  console.log("DEVICE_ROLE granted to deployer");
+  await accessControl.grantVerifierRole(await verification.getAddress());
+
+  await nft.setDataVerificationContract(verification.getAddress());
+
+  console.log("Deployment completed successfully!");
 }
 
-main().catch((error) => {
-  console.error("Deployment failed:", error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

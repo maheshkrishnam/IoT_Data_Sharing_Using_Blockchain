@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IoTDataNFT.sol";
-import "./AccessControl.sol";
+import "./IoTDataAccessControl.sol";
 import "./DataVerification.sol";
 
 contract IoTDataFactory is Ownable {
@@ -25,7 +25,6 @@ contract IoTDataFactory is Ownable {
         string metadataTemplate,
         uint256 basePrice
     );
-
     event DataNFTGenerated(
         uint256 indexed tokenId,
         string indexed dataType,
@@ -37,9 +36,16 @@ contract IoTDataFactory is Ownable {
         address accessControlAddress,
         address verificationAddress
     ) Ownable(msg.sender) {
+        require(
+            nftAddress != address(0) &&
+                accessControlAddress != address(0) &&
+                verificationAddress != address(0),
+            "Invalid address"
+        );
+
         nftContract = IoTDataNFT(nftAddress);
         accessControl = IoTDataAccessControl(accessControlAddress);
-        verificationContract = DataVerification(verificationAddress);
+        verificationContract = DataVerification(payable(verificationAddress));
     }
 
     function createTemplate(
@@ -47,31 +53,20 @@ contract IoTDataFactory is Ownable {
         string calldata metadataTemplate,
         uint256 basePrice
     ) external onlyOwner {
-        require(bytes(dataTemplates[dataType].dataType).length == 0, "Template already exists");
+        require(bytes(dataType).length > 0, "Empty data type");
+        require(
+            bytes(dataTemplates[dataType].dataType).length == 0,
+            "Template exists"
+        );
+        require(bytes(metadataTemplate).length > 0, "Empty template");
+
         templateType.push(dataType);
-        dataTemplates[dataType] = DataTemplate({
-            dataType: dataType,
-            metadataTemplate: metadataTemplate,
-            basePrice: basePrice
-        });
-
+        dataTemplates[dataType] = DataTemplate(
+            dataType,
+            metadataTemplate,
+            basePrice
+        );
         emit DataTemplateCreated(dataType, metadataTemplate, basePrice);
-    }
-
-    function getTemplate(string memory dataType) external view returns (DataTemplate memory) {
-        return dataTemplates[dataType];
-    }
-
-    function getAllTemplate() external view returns (DataTemplate[] memory) {
-        DataTemplate[] memory templates = new DataTemplate[](templateType.length);
-        for(uint i = 0; i < templateType.length; i++) {
-            templates[i] = dataTemplates[templateType[i]];
-        }
-        return templates;
-    }
-
-    function getTemplateCount() external view returns (uint256) {
-        return templateType.length;
     }
 
     function generateDataNFT(
@@ -80,13 +75,24 @@ contract IoTDataFactory is Ownable {
         string calldata location,
         string calldata additionalMetadata
     ) external returns (uint256) {
-        require(accessControl.isDevice(msg.sender), "Only devices can generate data");
-        require(bytes(dataTemplates[dataType].dataType).length > 0, "Invalid data type");
+        require(accessControl.isDevice(msg.sender), "Unauthorized");
+        require(bytes(deviceId).length > 0, "Invalid device ID");
+        require(bytes(location).length > 0, "Invalid location");
+        require(
+            bytes(dataTemplates[dataType].dataType).length > 0,
+            "Invalid data type"
+        );
 
-        string memory metadata = string(abi.encodePacked(
-            dataTemplates[dataType].metadataTemplate,
-            additionalMetadata
-        ));
+        DataTemplate memory template = dataTemplates[dataType];
+        string memory metadata = string.concat(
+            template.metadataTemplate,
+            "|",
+            additionalMetadata,
+            "|",
+            location,
+            "|",
+            deviceId
+        );
 
         uint256 tokenId = nftContract.safeMint(
             msg.sender,
@@ -98,5 +104,25 @@ contract IoTDataFactory is Ownable {
 
         emit DataNFTGenerated(tokenId, dataType, msg.sender);
         return tokenId;
+    }
+
+    function getAllTemplate() external view returns (DataTemplate[] memory) {
+        DataTemplate[] memory templates = new DataTemplate[](
+            templateType.length
+        );
+        for (uint i = 0; i < templateType.length; i++) {
+            templates[i] = dataTemplates[templateType[i]];
+        }
+        return templates;
+    }
+
+    function getTemplateCount() external view returns (uint256) {
+        return templateType.length;
+    }
+
+    function getTemplate(
+        string memory dataType
+    ) external view returns (DataTemplate memory) {
+        return dataTemplates[dataType];
     }
 }

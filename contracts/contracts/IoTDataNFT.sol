@@ -3,35 +3,25 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./IoTDataAccessControl.sol";
 
-interface IDataVerification {
-    enum VerificationStatus {
-        PENDING,
-        APPROVED,
-        REJECTED
-    }
-
-    function getVerificationStatus(
-        uint256 tokenId
-    )
-        external
-        view
-        returns (
-            VerificationStatus status,
-            string memory comments,
-            address verifier,
-            uint256 timestamp
-        );
-}
-
-
-contract IoTDataNFT is ERC721, ERC721URIStorage, Ownable, AccessControl {
+contract IoTDataNFT is ERC721, ERC721URIStorage {
     uint256 private _tokenIdCounter;
     address public dataVerificationContract;
+    address public immutable marketplaceAddress;
+    IoTDataAccessControl public accessControlContract;
 
     struct IoTData {
+        string deviceId;
+        uint256 timestamp;
+        string dataType;
+        string location;
+    }
+
+    struct TokenInfo {
+        uint256 tokenId;
+        address owner;
+        string uri;
         string deviceId;
         uint256 timestamp;
         string dataType;
@@ -41,9 +31,7 @@ contract IoTDataNFT is ERC721, ERC721URIStorage, Ownable, AccessControl {
     mapping(uint256 => IoTData) private _iotData;
     mapping(uint256 => bool) public isVerified;
     mapping(string => uint256[]) private _tokensByDevice;
-
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
+    uint256[] private _allTokens;
 
     event DataNFTMinted(
         uint256 indexed tokenId,
@@ -51,23 +39,43 @@ contract IoTDataNFT is ERC721, ERC721URIStorage, Ownable, AccessControl {
         string deviceId,
         uint256 timestamp
     );
+    event VerificationUpdated(uint256 indexed tokenId, bool verified);
 
-    constructor(
-        address initialOwner
-    ) ERC721("IoTDataNFT", "IOTN") Ownable(initialOwner) {
-        _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
-        _grantRole(MINTER_ROLE, initialOwner);
+    modifier onlyMinter() {
+        require(
+            accessControlContract.hasRole(
+                accessControlContract.MINTER_ROLE(),
+                msg.sender
+            ),
+            "Unauthorized role"
+        );
+        _;
     }
 
-    modifier onlyVerifier() {
-        require(hasRole(VERIFIER_ROLE, msg.sender), "Only verifier");
+    modifier onlyAdmin() {
+        require(
+            accessControlContract.hasRole(
+                accessControlContract.DEFAULT_ADMIN_ROLE(),
+                msg.sender
+            ),
+            "Unauthorized role"
+        );
         _;
+    }
+
+    constructor(
+        address _marketplace,
+        address _accessControl
+    ) ERC721("IoTDataNFT", "IOTN") {
+        marketplaceAddress = _marketplace;
+        accessControlContract = IoTDataAccessControl(_accessControl);
     }
 
     function setDataVerificationContract(
         address _verificationContract
-    ) external onlyOwner {
+    ) external {
         require(_verificationContract != address(0), "Invalid address");
+        require(_verificationContract.code.length > 0, "Not a contract");
         dataVerificationContract = _verificationContract;
     }
 
@@ -77,75 +85,84 @@ contract IoTDataNFT is ERC721, ERC721URIStorage, Ownable, AccessControl {
         string memory deviceId,
         string memory dataType,
         string memory location
-    ) public onlyRole(MINTER_ROLE) returns (uint256) {
-        uint256 tokenId = _tokenIdCounter;
-        _tokenIdCounter++;
-
+    ) public onlyMinter returns (uint256) {
+        uint256 tokenId = _tokenIdCounter++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
-
-        _iotData[tokenId] = IoTData({
-            deviceId: deviceId,
-            timestamp: block.timestamp,
-            dataType: dataType,
-            location: location
-        });
-
+        _iotData[tokenId] = IoTData(
+            deviceId,
+            block.timestamp,
+            dataType,
+            location
+        );
         _tokensByDevice[deviceId].push(tokenId);
-
+        _allTokens.push(tokenId);
         emit DataNFTMinted(tokenId, to, deviceId, block.timestamp);
         return tokenId;
     }
 
-    function getVerificationStatus(
+    function updateVerificationStatus(uint256 tokenId, bool verified) external {
+        require(
+            accessControlContract.isVerifier(msg.sender),
+            "Unauthorized role"
+        );
+        require(
+            msg.sender == dataVerificationContract,
+            "Unauthorized contract"
+        );
+        require(_isValidToken(tokenId), "Invalid token ID");
+        isVerified[tokenId] = verified;
+        emit VerificationUpdated(tokenId, verified);
+    }
+
+    function _buildInfo(
         uint256 tokenId
-    )
-        external
-        view
-        returns (
-            IDataVerification.VerificationStatus status,
-            string memory comments,
-            address verifier,
-            uint256 timestamp
-        )
-    {
-        require(_isValidToken(tokenId), "Invalid tokenId");
+    ) internal view returns (TokenInfo memory) {
+        IoTData storage device = _iotData[tokenId];
         return
-            IDataVerification(dataVerificationContract).getVerificationStatus(
-                tokenId
+            TokenInfo(
+                tokenId,
+                ownerOf(tokenId),
+                tokenURI(tokenId),
+                device.deviceId,
+                device.timestamp,
+                device.dataType,
+                device.location
             );
     }
 
-    function getTokensByDevice(
-        string calldata deviceId
-    ) external view returns (uint256[] memory) {
-        return _tokensByDevice[deviceId];
+    function getAllVerifiedNFTs() external view returns (TokenInfo[] memory) {
+        uint256 cnt;
+        for (uint i; i < _allTokens.length; i++)
+            if (isVerified[_allTokens[i]]) cnt++;
+        TokenInfo[] memory out = new TokenInfo[](cnt);
+        uint256 idx;
+        for (uint i; i < _allTokens.length; i++) {
+            uint256 tid = _allTokens[i];
+            if (isVerified[tid]) {
+                out[idx++] = _buildInfo(tid);
+            }
+        }
+        return out;
     }
 
-    function updateVerificationStatus(uint256 tokenId, bool verified) external onlyVerifier {
-        require(msg.sender == dataVerificationContract, "Unauthorized");
-        isVerified[tokenId] = verified;
-    }
-
-    function getIoTData(
-        uint256 tokenId
-    )
-        public
-        view
-        returns (
-            string memory deviceId,
-            uint256 timestamp,
-            string memory dataType,
-            string memory location
-        )
-    {
-        require(_isValidToken(tokenId), "Token does not exist");
-        IoTData memory data = _iotData[tokenId];
-        return (data.deviceId, data.timestamp, data.dataType, data.location);
+    function getAllUnverifiedNFTs() external view returns (TokenInfo[] memory) {
+        uint256 cnt;
+        for (uint i; i < _allTokens.length; i++)
+            if (!isVerified[_allTokens[i]]) cnt++;
+        TokenInfo[] memory out = new TokenInfo[](cnt);
+        uint256 idx;
+        for (uint i; i < _allTokens.length; i++) {
+            uint256 tid = _allTokens[i];
+            if (!isVerified[tid]) {
+                out[idx++] = _buildInfo(tid);
+            }
+        }
+        return out;
     }
 
     function _isValidToken(uint256 tokenId) internal view returns (bool) {
-        return tokenId < _tokenIdCounter;
+        return _ownerOf(tokenId) != address(0);
     }
 
     function tokenURI(
@@ -156,16 +173,7 @@ contract IoTDataNFT is ERC721, ERC721URIStorage, Ownable, AccessControl {
 
     function supportsInterface(
         bytes4 interfaceId
-    )
-        public
-        view
-        override(ERC721, ERC721URIStorage, AccessControl)
-        returns (bool)
-    {
+    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    function ownerOf(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        return super.ownerOf(tokenId);
     }
 }

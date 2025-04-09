@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 contract Payment is Ownable, ReentrancyGuard {
     uint256 public platformFeePercentage;
     address public platformWallet;
-    uint256 saleCounter;
+    uint256 public platformTotalRevenue;
+    uint256 private saleCounter;
 
     event PaymentProcessed(
         uint256 indexed saleId,
@@ -16,84 +17,110 @@ contract Payment is Ownable, ReentrancyGuard {
         uint256 amount,
         uint256 fee
     );
+    event FeeUpdated(uint256 newFee);
+    event WalletUpdated(address newWallet);
 
-    struct Sale{
-        address buyer;
-        uint256 amount;
-        uint256 timestamp;
-    }
-
-    struct SaleRecord{
+    struct SaleRecord {
         address buyer;
         address seller;
         uint256 amount;
+        uint256 fee;
         uint256 timestamp;
     }
 
-    mapping(address => Sale[]) public salesHistory;
+    mapping(address => SaleRecord[]) public salesHistory;
     mapping(address => uint256) public salesBySeller;
     SaleRecord[] private allSaleOnPlatform;
-    uint256 public platformTotalRevenue;
 
-    constructor(uint256 _feePercentage, address _platformWallet) Ownable(msg.sender) {
+    constructor(
+        uint256 _feePercentage,
+        address _platformWallet
+    ) Ownable(msg.sender) {
+        require(_feePercentage <= 20, "Fee exceeds 20%");
+        require(_platformWallet != address(0), "Invalid wallet");
         platformFeePercentage = _feePercentage;
         platformWallet = _platformWallet;
     }
 
-
     function processPayment(address seller) external payable nonReentrant {
-        require(msg.value > 0, "Payment amount must be greater than 0");
+        require(msg.value > 0, "No payment");
+        require(seller != address(0), "Invalid seller");
 
-        uint256 feeAmount = (msg.value * platformFeePercentage) / 100;
-        uint256 sellerAmount = msg.value - feeAmount;
+        uint256 fee = (msg.value * platformFeePercentage) / 100;
+        uint256 sellerAmount = msg.value - fee;
 
-        (bool feeSuccess, ) = platformWallet.call{value: feeAmount}("");
-        (bool sellerSuccess, ) = seller.call{value: sellerAmount}("");
+        (bool success1, ) = platformWallet.call{value: fee}("");
+        (bool success2, ) = seller.call{value: sellerAmount}("");
+        require(success1 && success2, "Transfer failed");
 
-        require(feeSuccess && sellerSuccess, "Payment transfer failed");
+        SaleRecord memory record = SaleRecord(
+            msg.sender,
+            seller,
+            msg.value,
+            fee,
+            block.timestamp
+        );
 
-        salesHistory[seller].push(Sale(msg.sender, msg.value, block.timestamp));
-        allSaleOnPlatform.push(SaleRecord(msg.sender, seller, msg.value, block.timestamp));
+        salesHistory[seller].push(record);
+        allSaleOnPlatform.push(record);
         salesBySeller[seller] += msg.value;
-        platformTotalRevenue += feeAmount;
+        platformTotalRevenue += fee;
         saleCounter++;
 
-        emit PaymentProcessed(saleCounter, seller, msg.sender, msg.value, feeAmount);
+        emit PaymentProcessed(saleCounter, seller, msg.sender, msg.value, fee);
     }
 
-    function getSalesHistory() external view returns (Sale[] memory) {
-        return salesHistory[msg.sender];
+    function updateFeePercentage(uint256 newFeePercentage) external onlyOwner {
+        require(newFeePercentage <= 20, "Fee exceeds 20%");
+        platformFeePercentage = newFeePercentage;
+        emit FeeUpdated(newFeePercentage);
     }
 
-    function getSalesValue() external view returns (uint256) {
-        return salesBySeller[msg.sender];
+    function updatePlatformWallet(address newWallet) external onlyOwner {
+        require(newWallet != address(0), "Invalid wallet");
+        platformWallet = newWallet;
+        emit WalletUpdated(newWallet);
+    }
+
+    function getSalesHistory(
+        address seller
+    ) external view returns (SaleRecord[] memory) {
+        return salesHistory[seller];
+    }
+
+    function getSalesValue(address seller) external view returns (uint256) {
+        return salesBySeller[seller];
     }
 
     function getTotalSaleValue() external view onlyOwner returns (uint256) {
         return platformTotalRevenue;
     }
 
-    function getPlatformSales() external view onlyOwner returns (SaleRecord[] memory) {
+    function getPlatformSales()
+        external
+        view
+        onlyOwner
+        returns (SaleRecord[] memory)
+    {
         return allSaleOnPlatform;
     }
 
-    function getPlatformStats() external view onlyOwner returns (
-        uint256 totalRevenue,
-        uint256 totalSales,
-        uint256 avgSaleValue
-    ) {
+    function getPlatformStats()
+        external
+        view
+        onlyOwner
+        returns (
+            uint256 totalRevenue,
+            uint256 totalSales,
+            uint256 avgFeePerSale
+        )
+    {
         totalRevenue = platformTotalRevenue;
         totalSales = allSaleOnPlatform.length;
-        avgSaleValue = totalSales > 0 ? platformTotalRevenue / totalSales : 0;
+        avgFeePerSale = totalSales > 0 ? platformTotalRevenue / totalSales : 0;
     }
 
-    function updateFeePercentage(uint256 newFeePercentage) external onlyOwner {
-        require(newFeePercentage <= 20, "Fee cannot exceed 20%");
-        platformFeePercentage = newFeePercentage;
-    }
-
-    function updatePlatformWallet(address newWallet) external onlyOwner {
-        require(newWallet != address(0), "Invalid wallet address");
-        platformWallet = newWallet;
+    receive() external payable {
+        revert("Direct payments disabled");
     }
 }
