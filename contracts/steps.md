@@ -92,11 +92,11 @@ await IoTDataFactory.connect(admin).createTemplate("temperature", "Sensor:{value
 await IoTDataFactory.connect(admin).createTemplate("humidity", "Humidity:{value}%", ethers.parseEther("0.002"));
 ```
 
-## Set verifier
+## Get template detail
 ```bash
-await AccessControl.connect(admin).grantVerifierRole(IoTDataFactory.target);
-
-await IoTDataNFT.connect(admin).setDataVerificationContract(DataVerification.target);
+await IoTDataFactory.getAllTemplate();
+await IoTDataFactory.getTemplateCount();
+await IoTDataFactory.getTemplate("temperature");
 ```
 
 ## Generate an IoT Data NFT (Device only):
@@ -105,13 +105,6 @@ tx = await IoTDataFactory.connect(user1).generateDataNFT("device-001", "temperat
 receipt = await tx.wait();
 event = receipt.logs.find(log => log.fragment && log.fragment.name === "DataNFTGenerated");
 tokenId = event.args[0];
-```
-
-## Get template detail
-```bash
-await IoTDataFactory.getAllTemplate();
-await IoTDataFactory.getTemplateCount();
-await IoTDataFactory.getTemplate("temperature");
 ```
 
 ## Get detail about NFT
@@ -131,7 +124,7 @@ await DataVerification.getVerificationStatus(tokenId);
 
 ### Approval from user first
 ```bash
-await IoTDataNFT.connect(user1).approve(Marketplace.target, TOKEN_ID);
+await IoTDataNFT.connect(user1).approve(Marketplace.target, tokenId);
 # OR
 await IoTDataNFT.connect(user1).setApprovalForAll(Marketplace.target, true);
 ```
@@ -145,26 +138,11 @@ await Marketplace.connect(user3).buyItem(IoTDataNFT.target, tokenId, {value: eth
 await Marketplace.connect(user1).cancelListing(IoTDataNFT.target, tokenId);
 ```
 
-### Listing details
-```bash
-await Marketplace.getAllListings();
-await Marketplace.getActiveListings();
-
-```
-
 ## View listings
 ```bash
 await Marketplace.getAllListings();
 await Marketplace.getActiveListings();
 await Marketplace.listings(IoTDataNFT.target, tokenId);
-```
-
-### Buy an NFT:
-```bash
-await Marketplace.connect(user3).buyItem("0xNFT_CONTRACT_ADDRESS", TOKEN_ID, { value: ethers.parseEther("PRICE_IN_ETH") });
-```
-```bash
-await Marketplace.connect(user3).buyItem(IoTDataNFT.target, tokenId, { value: ethers.parseEther("0.000001") });
 ```
 
 ## Payment:
@@ -176,9 +154,4 @@ await Payment.getSalesValue(user1.address);
 await Payment.getTotalSaleValue();
 await Payment.getPlatformSales();
 await Payment.getPlatformStats();
-```
-
-### Send payment to the seller:
-```bash
-await Payment.connect(user3).processPayment(user1.address, { value: ethers.parseEther("0.000001") });
 ```
