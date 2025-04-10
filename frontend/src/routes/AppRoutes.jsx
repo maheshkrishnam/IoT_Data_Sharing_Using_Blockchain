@@ -4,7 +4,6 @@ import DataMarketplace from "../components/DataMarketplace";
 import Dashboard from "../components/Dashboard";
 import { VerificationPanel } from "../components/VerificationPanel";
 import { RoleManager } from '../components/RoleManager';
-import { AdminTemplateManager } from '../components/CreateTemplate';
 
 const AppRoutes = () => {
   return (
@@ -15,7 +14,6 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="verification-panel" element={<VerificationPanel />} />
           <Route path="role-manager" element={<RoleManager />} />
-          <Route path="template" element={<AdminTemplateManager />} />
         </Route>
       </Routes>
     </BrowserRouter>

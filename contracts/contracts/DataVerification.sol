@@ -2,29 +2,22 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./AccessControl.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+// import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./IoTDataAccessControl.sol";
+import "./IoTDataNFT.sol";
 
-interface IIoTDataNFT {
-    function ownerOf(uint256 tokenId) external view returns (address);
-    function updateVerificationStatus(uint256 tokenId, bool verified) external;
-}
-
-contract DataVerification is Ownable {
+contract DataVerification is Ownable, ReentrancyGuard {
     IoTDataAccessControl public immutable accessControl;
-    address public nftContract;
+
+    IoTDataNFT public nftContract;
 
     enum VerificationStatus {
         PENDING,
         APPROVED,
         REJECTED
     }
-
-    event DataVerified(
-        uint256 indexed tokenId,
-        VerificationStatus status,
-        address indexed verifier,
-        string comments
-    );
 
     struct VerificationResult {
         VerificationStatus status;
@@ -34,6 +27,14 @@ contract DataVerification is Ownable {
     }
 
     mapping(uint256 => VerificationResult) public verificationResults;
+
+    event DataVerified(
+        uint256 indexed tokenId,
+        VerificationStatus status,
+        address indexed verifier,
+        string comments
+    );
+    event NFTContractUpdated(address indexed newContract);
 
     constructor(address _accessControlAddress) Ownable(msg.sender) {
         require(
@@ -45,24 +46,32 @@ contract DataVerification is Ownable {
 
     function setNFTContract(address _nftContract) external onlyOwner {
         require(_nftContract != address(0), "Invalid address");
-        nftContract = _nftContract;
+        require(
+            IERC165(_nftContract).supportsInterface(type(IERC721).interfaceId),
+            "Not ERC721"
+        );
+
+        nftContract = IoTDataNFT(_nftContract);
+        emit NFTContractUpdated(_nftContract);
     }
 
     function verifyData(
         uint256 tokenId,
         VerificationStatus status,
         string memory comments
-    ) external {
-        require(nftContract != address(0), "NFT contract not set");
-        emit DataVerified(0, VerificationStatus.PENDING, msg.sender, "Debug: msg.sender");
-        require(accessControl.isVerifier(msg.sender), "Only verifiers");
+    ) external nonReentrant {
+        require(address(nftContract) != address(0), "NFT contract not set");
         require(
-            IIoTDataNFT(nftContract).ownerOf(tokenId) != address(0),
-            "Invalid token ID"
+            accessControl.hasRole(accessControl.VERIFIER_ROLE(), msg.sender),
+            "Caller is not a verifier"
         );
+        require(nftContract.ownerOf(tokenId) != address(0), "Invalid token ID");
 
         if (status == VerificationStatus.REJECTED) {
-            require(bytes(comments).length > 0, "Rejection requires comments");
+            require(
+                bytes(comments).length >= 20,
+                "Minimum 20 chars for rejection"
+            );
         }
 
         verificationResults[tokenId] = VerificationResult({
@@ -72,7 +81,7 @@ contract DataVerification is Ownable {
             timestamp: block.timestamp
         });
 
-        IIoTDataNFT(nftContract).updateVerificationStatus(
+        nftContract.updateVerificationStatus(
             tokenId,
             status == VerificationStatus.APPROVED
         );
@@ -94,5 +103,9 @@ contract DataVerification is Ownable {
             result.verifier,
             result.timestamp
         );
+    }
+
+    receive() external payable {
+        revert("Direct payments not allowed");
     }
 }

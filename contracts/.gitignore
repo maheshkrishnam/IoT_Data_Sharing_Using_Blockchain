@@ -1,0 +1,48 @@
+# Node.js dependencies
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log*
+
+# Environment variables (Private Keys, API Keys, etc.)
+.env
+.env.local
+.env.*.local
+
+# Hardhat build artifacts & cache
+artifacts/
+cache/
+typechain/
+typechain-types/
+
+# Test & Coverage
+coverage/
+test-results/
+gas-report.txt
+*.tsbuildinfo
+
+# Deployment-related (optional)
+deployments/
+deployments.json
+
+# Logs
+logs/
+debug.log
+*.log
+*.log.*
+
+# Truffle files (if using Truffle)
+migrations/
+truffle-config.js
+truffle-config.ts
+
+# Solidity temp files
+*.swp
+*.swo
+*.sol.ts
+
+# OS & Editor-specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
