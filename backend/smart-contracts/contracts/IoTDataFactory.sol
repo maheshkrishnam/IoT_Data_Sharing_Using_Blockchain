@@ -17,6 +17,10 @@ contract IoTDataFactory is Ownable {
         uint256 basePrice;
     }
 
+<<<<<<< Updated upstream:backend/smart-contracts/contracts/IoTDataFactory.sol
+=======
+    string[] private templateType; // Array to track all template types
+>>>>>>> Stashed changes:contracts/contracts/IoTDataFactory.sol
     mapping(string => DataTemplate) public dataTemplates;
 
     event DataTemplateCreated(
@@ -36,6 +40,13 @@ contract IoTDataFactory is Ownable {
         address _accessControlAddress,
         address _verificationAddress
     ) Ownable(msg.sender) {
+<<<<<<< Updated upstream:backend/smart-contracts/contracts/IoTDataFactory.sol
+=======
+        require(_nftAddress != address(0), "Invalid NFT address");
+        require(_accessControlAddress != address(0), "Invalid access control address");
+        require(_verificationAddress != address(0), "Invalid verification address");
+
+>>>>>>> Stashed changes:contracts/contracts/IoTDataFactory.sol
         nftContract = IoTDataNFT(_nftAddress);
         accessControl = IoTDataAccessControl(_accessControlAddress);
         verificationContract = DataVerification(_verificationAddress);
@@ -46,6 +57,14 @@ contract IoTDataFactory is Ownable {
         string memory metadataTemplate,
         uint256 basePrice
     ) external onlyOwner {
+<<<<<<< Updated upstream:backend/smart-contracts/contracts/IoTDataFactory.sol
+=======
+        // Check if dataType is new; if so, add to templateType array
+        if (bytes(dataTemplates[dataType].dataType).length == 0) {
+            templateType.push(dataType);
+        }
+
+>>>>>>> Stashed changes:contracts/contracts/IoTDataFactory.sol
         dataTemplates[dataType] = DataTemplate({
             dataType: dataType,
             metadataTemplate: metadataTemplate,
@@ -55,6 +74,26 @@ contract IoTDataFactory is Ownable {
         emit DataTemplateCreated(dataType, metadataTemplate, basePrice);
     }
 
+<<<<<<< Updated upstream:backend/smart-contracts/contracts/IoTDataFactory.sol
+=======
+    function getTemplate(string memory dataType) external view returns (DataTemplate memory) {
+        require(bytes(dataTemplates[dataType].dataType).length > 0, "Template does not exist");
+        return dataTemplates[dataType];
+    }
+
+    function getAllTemplates() external view returns (DataTemplate[] memory) {
+        DataTemplate[] memory templates = new DataTemplate[](templateType.length);
+        for (uint256 i = 0; i < templateType.length; i++) {
+            templates[i] = dataTemplates[templateType[i]];
+        }
+        return templates;
+    }
+
+    function getTemplateCount() external view returns (uint256) {
+        return templateType.length;
+    }
+
+>>>>>>> Stashed changes:contracts/contracts/IoTDataFactory.sol
     function generateDataNFT(
         string memory deviceId,
         string memory dataType,
@@ -64,10 +103,9 @@ contract IoTDataFactory is Ownable {
         require(accessControl.isDevice(msg.sender), "Only devices can generate data");
         require(bytes(dataTemplates[dataType].dataType).length > 0, "Invalid data type");
 
-        string memory metadata = string(abi.encodePacked(
-            dataTemplates[dataType].metadataTemplate,
-            additionalMetadata
-        ));
+        string memory metadata = string(
+            abi.encodePacked(dataTemplates[dataType].metadataTemplate, additionalMetadata)
+        );
 
         uint256 tokenId = nftContract.safeMint(
             msg.sender,
