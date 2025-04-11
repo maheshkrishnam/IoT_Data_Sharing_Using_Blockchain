@@ -4,7 +4,7 @@ import { useContractRead, useContractWrite } from '../hooks/useContracts';
 import toast from 'react-hot-toast';
 
 function DeviceNFT() {
-  const { role, isConnected } = useUserRole();
+  const { isDevice, isConnected } = useUserRole();
   const [deviceId, setDeviceId] = useState('');
   const [dataType, setDataType] = useState('');
   const [location, setLocation] = useState('');
@@ -57,7 +57,7 @@ function DeviceNFT() {
     return <div className="text-center text-red-500">Please connect your wallet</div>;
   }
 
-  if (role !== 'device') {
+  if ( !isDevice ) {
     return <div className="text-center text-red-500">Only devices can access this page</div>;
   }
 
@@ -88,7 +88,7 @@ function DeviceNFT() {
         </select>
         <input
           type="text"
-          placeholder="Location (e.g., New York)"
+          placeholder="Location (e.g., Dharwad)"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           className="w-64 mb-2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"

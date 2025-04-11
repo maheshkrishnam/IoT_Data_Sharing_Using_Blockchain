@@ -5,18 +5,16 @@ import { useContractRead } from '../hooks/useContracts';
 import toast from 'react-hot-toast';
 
 function DeviceNFTs() {
-  const { role, isConnected } = useUserRole();
+  const { role, isDevice, isConnected } = useUserRole();
   const { address } = useAccount();
   const [nftContractAddress, setNftContractAddress] = useState(null);
 
-  // Fetch IoTDataNFT contract address from IoTDataFactory
   const { data: nftAddress } = useContractRead({
     contractName: 'IoTDataFactory',
     functionName: 'nftContract',
     enabled: isConnected,
   });
 
-  // Fetch owned NFTs from IoTDataNFT
   const { data: ownedNFTs, isLoading, error } = useContractRead({
     contractName: 'IoTDataNFT',
     functionName: 'getOwnedNFTs',
@@ -35,7 +33,7 @@ function DeviceNFTs() {
     return <div className="text-center text-red-500">Please connect your wallet</div>;
   }
 
-  if (role !== 'device') {
+  if (!isDevice) {
     return <div className="text-center text-red-500">Only devices can access this page</div>;
   }
 
@@ -49,14 +47,13 @@ function DeviceNFTs() {
     return <div className="text-center text-red-500">Failed to load NFTs</div>;
   }
 
-  // Map NFT data to a readable format
   const nftList = ownedNFTs?.map((nft, index) => {
-    const uriParts = nft.uri.split('|'); // Split uri into template|additionalMetadata|location|deviceId
+    const uriParts = nft.uri.split('|');
     return {
       key: index,
       tokenId: nft.tokenId.toString(),
       deviceId: nft.deviceId,
-      timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(), // Convert BigInt to Number
+      timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
       dataType: nft.dataType,
       location: nft.location,
       metadataTemplate: uriParts[0] || '',

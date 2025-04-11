@@ -66,7 +66,6 @@ contract DataVerification is Ownable, ReentrancyGuard {
             "Caller is not a verifier"
         );
         require(nftContract.ownerOf(tokenId) != address(0), "Invalid token ID");
-
         if (status == VerificationStatus.REJECTED) {
             require(
                 bytes(comments).length >= 20,

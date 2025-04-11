@@ -4,7 +4,7 @@ import { useContractRead } from './useContracts';
 export function useUserRole() {
   const { address, isConnected } = useAccount();
 
-  const { data: isAdmin } = useContractRead({
+  const { data: isAdminData } = useContractRead({
     contractName: 'IoTDataAccessControl',
     functionName: 'hasRole',
     args: [
@@ -14,26 +14,31 @@ export function useUserRole() {
     enabled: isConnected,
   });
 
-  const { data: isVerifier } = useContractRead({
+  const { data: isVerifierData } = useContractRead({
     contractName: 'IoTDataAccessControl',
     functionName: 'isVerifier',
     args: [address],
     enabled: isConnected,
   });
 
-  const { data: isDevice } = useContractRead({
+  const { data: isDeviceData } = useContractRead({
     contractName: 'IoTDataAccessControl',
     functionName: 'isDevice',
     args: [address],
     enabled: isConnected,
   });
 
-  const { data: isBuyer } = useContractRead({
+  const { data: isBuyerData } = useContractRead({
     contractName: 'IoTDataAccessControl',
     functionName: 'isDataBuyer',
     args: [address],
     enabled: isConnected,
   });
+
+  const isAdmin = Boolean(isAdminData);
+  const isVerifier = Boolean(isVerifierData);
+  const isDevice = Boolean(isDeviceData);
+  const isBuyer = Boolean(isBuyerData);
 
   const role = isConnected
     ? isAdmin
@@ -44,8 +49,8 @@ export function useUserRole() {
       ? 'device'
       : isBuyer
       ? 'buyer'
-      : 'common'
+      : 'user'
     : null;
 
-  return { role, isConnected, address };
+  return { role, isAdmin, isBuyer, isDevice, isVerifier, isConnected, address };
 }

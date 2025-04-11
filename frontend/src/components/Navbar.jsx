@@ -7,7 +7,6 @@ import { useUserRole } from "../hooks/useUserRole";
 
 function Navbar() {
   const items = [
-    { key: "dashboard", label: <Link to="/">Dashboard</Link> },
     { key: "templates", label: <Link to="/templates">Templates</Link> },
     {
       key: "generate-nft",
@@ -15,7 +14,7 @@ function Navbar() {
     },
     { key: "nfts", label: <Link to="/nfts">NFTs</Link> },
     { key: "marketplace", label: <Link to="/marketplace">Marketplace</Link> },
-    { key: "sales", label: <Link to="/sales">Sales</Link> },
+    { key: "verifier", label: <Link to="/verifier">Verifier</Link> },
     { key: "admin", label: <Link to="/admin">Admin</Link> },
   ];
 
