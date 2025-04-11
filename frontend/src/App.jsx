@@ -13,11 +13,11 @@ function App() {
   return (
     <Layout>
       <Routes>
+        <Route path="/" element={<Admin />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/generate-nft" element={<GenerateNFT />} />
         <Route path="/nfts" element={<NFTs />} />
         <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/admin" element={<Admin />} />
         <Route path="/verifier" element={<Verifier />} />
       </Routes>
       <Toaster position="bottom-right" />

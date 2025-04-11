@@ -13,7 +13,7 @@ function Navbar() {
     { path: "/nfts", label: "NFTs" },
     { path: "/marketplace", label: "Marketplace" },
     { path: "/verifier", label: "Verifier" },
-    { path: "/admin", label: "Admin" },
+    { path: "/", label: "Admin" },
   ];
 
   return (

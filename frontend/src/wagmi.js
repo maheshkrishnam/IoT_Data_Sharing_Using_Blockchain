@@ -1,5 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { sepolia } from 'wagmi/chains';
 
 const localhost = {
   id: 31337,
@@ -20,12 +21,13 @@ const localhost = {
   },
 };
 
+export const chains = [localhost, sepolia];
+
 export const wagmiClient = createConfig({
-  chains: [localhost],
+  chains: [localhost, sepolia],
   connectors: [injected()],
   transports: {
-    [localhost.id]: http(import.meta.env.VITE_LOCALHOST_RPC_URL),
+    [localhost.id]: http('http://127.0.0.1:8545'),
+    [sepolia.id]: http(`https://sepolia.infura.io/v3/${import.meta.env.VITE_INFURA_PROJECT_ID}`),
   },
 });
-
-export const chains = [localhost];
