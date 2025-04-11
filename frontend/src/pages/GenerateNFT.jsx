@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
 import { useUserRole } from '../hooks/useUserRole';
 import { useContractRead, useContractWrite } from '../hooks/useContracts';
 import toast from 'react-hot-toast';
 
 function DeviceNFT() {
   const { role, isConnected } = useUserRole();
-  const { address } = useAccount();
   const [deviceId, setDeviceId] = useState('');
   const [dataType, setDataType] = useState('');
   const [location, setLocation] = useState('');
