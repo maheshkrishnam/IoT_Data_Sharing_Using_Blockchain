@@ -35,9 +35,7 @@ function DeviceNFT() {
 
     const args = [deviceId, dataType.toLowerCase(), location, additionalMetadata];
 
-    generateNFT(
-      args,
-      {
+    generateNFT(args, {
       onSuccess: (tx) => {
         console.log('Transaction successful:', tx);
         toast.success('NFT generated successfully');
@@ -57,27 +55,27 @@ function DeviceNFT() {
     return <div className="text-center text-red-500">Please connect your wallet</div>;
   }
 
-  if ( !isDevice ) {
+  if (!isDevice) {
     return <div className="text-center text-red-500">Only devices can access this page</div>;
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl mb-4">Generate Data NFT</h1>
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Generate Data NFT</h1>
 
-      <div className="mb-6">
-        <h2 className="text-xl mb-2">Create New NFT</h2>
+      <div className="flex flex-col gap-3">
         <input
           type="text"
           placeholder="Device ID (e.g., device123)"
           value={deviceId}
           onChange={(e) => setDeviceId(e.target.value)}
-          className="w-64 mb-2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+
         <select
           value={dataType}
           onChange={(e) => setDataType(e.target.value)}
-          className="w-64 mb-2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select Data Type</option>
           {templates?.map((t) => (
@@ -86,24 +84,29 @@ function DeviceNFT() {
             </option>
           ))}
         </select>
+
         <input
           type="text"
           placeholder="Location (e.g., Dharwad)"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          className="w-64 mb-2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+
         <input
           type="text"
           placeholder="Additional Metadata (e.g., {'temp': '25'})"
           value={additionalMetadata}
           onChange={(e) => setAdditionalMetadata(e.target.value)}
-          className="w-64 mb-2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+
         <button
           onClick={handleGenerateNFT}
           disabled={isPending}
-          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`p-2 text-white rounded transition ${
+            isPending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+          }`}
         >
           {isPending ? 'Generating...' : 'Generate NFT'}
         </button>

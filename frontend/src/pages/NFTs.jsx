@@ -47,53 +47,41 @@ function DeviceNFTs() {
     return <div className="text-center text-red-500">Failed to load NFTs</div>;
   }
 
-  const nftList = ownedNFTs?.map((nft, index) => {
-    const uriParts = nft.uri.split('|');
-    return {
-      key: index,
-      tokenId: nft.tokenId.toString(),
-      deviceId: nft.deviceId,
-      timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
-      dataType: nft.dataType,
-      location: nft.location,
-      metadataTemplate: uriParts[0] || '',
-      additionalMetadata: uriParts[1] || '',
-    };
-  }) || [];
+  const nftList =
+    ownedNFTs?.map((nft, index) => {
+      const uriParts = nft.uri.split('|');
+      return {
+        key: index,
+        tokenId: nft.tokenId.toString(),
+        deviceId: nft.deviceId,
+        timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
+        dataType: nft.dataType,
+        location: nft.location,
+        metadataTemplate: uriParts[0] || '',
+        additionalMetadata: uriParts[1] || '',
+      };
+    }) || [];
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl mb-4">Your Generated NFTs</h1>
+      <h1 className="text-2xl mb-4 font-semibold">Your Generated NFTs</h1>
 
       {nftList.length > 0 ? (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2 border">Token ID</th>
-              <th className="p-2 border">Device ID</th>
-              <th className="p-2 border">Data Type</th>
-              <th className="p-2 border">Location</th>
-              <th className="p-2 border">Timestamp</th>
-              <th className="p-2 border">Template</th>
-              <th className="p-2 border">Additional Metadata</th>
-            </tr>
-          </thead>
-          <tbody>
-            {nftList.map((nft) => (
-              <tr key={nft.key} className="hover:bg-gray-100">
-                <td className="p-2 border">{nft.tokenId}</td>
-                <td className="p-2 border">{nft.deviceId}</td>
-                <td className="p-2 border">{nft.dataType}</td>
-                <td className="p-2 border">{nft.location}</td>
-                <td className="p-2 border">{nft.timestamp}</td>
-                <td className="p-2 border">{nft.metadataTemplate}</td>
-                <td className="p-2 border">{nft.additionalMetadata}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {nftList.map((nft) => (
+            <div key={nft.key} className="p-4 border rounded-lg shadow-md bg-white">
+              <p className="text-lg font-semibold">Token ID: {nft.tokenId}</p>
+              <p className="text-sm text-gray-600">Device ID: {nft.deviceId}</p>
+              <p className="text-sm text-gray-600">Data Type: {nft.dataType}</p>
+              <p className="text-sm text-gray-600">Location: {nft.location}</p>
+              <p className="text-sm text-gray-600">Timestamp: {nft.timestamp}</p>
+              <p className="text-sm text-gray-600">Template: {nft.metadataTemplate}</p>
+              <p className="text-sm text-gray-600">Metadata: {nft.additionalMetadata}</p>
+            </div>
+          ))}
+        </div>
       ) : (
-        <p className="text-center">No NFTs found for this device</p>
+        <p className="text-center text-gray-700">No NFTs found for this device</p>
       )}
     </div>
   );

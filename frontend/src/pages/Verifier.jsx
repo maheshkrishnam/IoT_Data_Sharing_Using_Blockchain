@@ -21,7 +21,7 @@ function VerifierNFTs() {
     address: nftContractAddress,
   });
 
-  const { write: verifyData, isPending, } = useContractWrite({
+  const { write: verifyData, isPending } = useContractWrite({
     contractName: 'DataVerification',
     functionName: 'verifyData',
   });
@@ -29,112 +29,78 @@ function VerifierNFTs() {
   useEffect(() => {
     if (nftAddress) {
       setNftContractAddress(nftAddress);
-      console.log('IoTDataNFT address:', nftAddress);
     }
   }, [nftAddress]);
 
   const handleVerify = (tokenId, status) => {
     const comment = comments[tokenId] || 'No comment';
-
-    verifyData(
-      [tokenId, status, comment],
-      {
-      onSuccess: (tx) => {
-        const statusText = status === 1 ? 'Verified' : 'Rejected';
-        console.log('Verification successful:', tx);
-        toast.success(`NFT ${tokenId} marked as ${statusText}`);
+    verifyData([tokenId, status, comment], {
+      onSuccess: () => {
+        toast.success(`NFT ${tokenId} ${status === 1 ? 'Verified' : 'Rejected'}`);
         setComments((prev) => ({ ...prev, [tokenId]: '' }));
       },
-      onError: (err) => {
-        console.error('Verification error:', err);
-        toast.error(`Error: ${err.message}`);
-      },
+      onError: (err) => toast.error(`Error: ${err.message}`),
     });
-  };
-
-  const handleCommentChange = (tokenId, value) => {
-    setComments((prev) => ({ ...prev, [tokenId]: value }));
   };
 
   if (!isConnected) return <div className="text-center text-red-500">Please connect your wallet</div>;
   if (!isVerifier) return <div className="text-center text-red-500">Only verifiers can access this page</div>;
   if (isLoading) return <div className="text-center">Loading unverified NFTs...</div>;
-  if (error) {
-    toast.error(`Error fetching unverified NFTs: ${error.message}`);
-    console.error('NFT fetch error:', error);
-    return <div className="text-center text-red-500">Failed to load unverified NFTs</div>;
-  }
+  if (error) return <div className="text-center text-red-500">Failed to load unverified NFTs</div>;
 
-  const nftList = unverifiedNFTs?.map((nft, index) => {
-    const uriParts = nft.uri.split('|');
-    return {
-      key: index,
-      tokenId: nft.tokenId.toString(),
-      owner: nft.owner,
-      deviceId: nft.deviceId,
-      dataType: nft.dataType,
-      location: nft.location,
-      timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
-      metadataTemplate: uriParts[0] || '',
-      additionalMetadata: uriParts[1] || '',
-    };
-  }) || [];
-
-  console.log('Unverified NFT list:', nftList);
+  const nftList =
+    unverifiedNFTs?.map((nft, index) => {
+      const uriParts = nft.uri.split('|');
+      return {
+        key: index,
+        tokenId: nft.tokenId.toString(),
+        owner: nft.owner,
+        deviceId: nft.deviceId,
+        dataType: nft.dataType,
+        location: nft.location,
+        timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
+        metadataTemplate: uriParts[0] || '',
+        additionalMetadata: uriParts[1] || '',
+      };
+    }) || [];
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl mb-4">Verify NFTs</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Verify NFTs</h1>
 
       {nftList.length > 0 ? (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2 border">Token ID</th>
-              <th className="p-2 border">Owner</th>
-              <th className="p-2 border">Device ID</th>
-              <th className="p-2 border">Data Type</th>
-              <th className="p-2 border">Location</th>
-              <th className="p-2 border">Timestamp</th>
-              <th className="p-2 border">Template</th>
-              <th className="p-2 border">Additional Metadata</th>
-              <th className="p-2 border">Comments</th>
-              <th className="p-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {nftList.map((nft) => (
-              <tr key={nft.key} className="hover:bg-gray-100">
-                <td className="p-2 border">{nft.tokenId}</td>
-                <td className="p-2 border">{nft.owner}</td>
-                <td className="p-2 border">{nft.deviceId}</td>
-                <td className="p-2 border">{nft.dataType}</td>
-                <td className="p-2 border">{nft.location}</td>
-                <td className="p-2 border">{nft.timestamp}</td>
-                <td className="p-2 border">{nft.metadataTemplate}</td>
-                <td className="p-2 border">{nft.additionalMetadata}</td>
-                <td className="p-2 border">
-                  <input
-                    type="text"
-                    value={comments[nft.tokenId] || ''}
-                    onChange={(e) => handleCommentChange(nft.tokenId, e.target.value)}
-                    placeholder="Add comment"
-                    className="w-full p-1 border rounded"
-                  />
-                </td>
-                <td className="p-2 border">
-                  <button
-                    onClick={() => handleVerify(nft.tokenId, 1)} // VERIFIED
-                    disabled={isPending}
-                    className={`px-2 py-1 bg-green-500 text-white rounded mr-2 ${isPending ? 'opacity-50' : 'hover:bg-green-600'}`}
-                  >
-                    {isPending ? 'Processing...' : 'Verify'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {nftList.map((nft) => (
+            <div key={nft.key} className="bg-white shadow-lg rounded-lg p-4 border">
+              <h2 className="text-lg font-semibold mb-2">Token ID: {nft.tokenId}</h2>
+              <p className="text-sm text-gray-600">Owner: <span className="font-medium">{nft.owner}</span></p>
+              <p className="text-sm text-gray-600">Device ID: <span className="font-medium">{nft.deviceId}</span></p>
+              <p className="text-sm text-gray-600">Data Type: <span className="font-medium">{nft.dataType}</span></p>
+              <p className="text-sm text-gray-600">Location: <span className="font-medium">{nft.location}</span></p>
+              <p className="text-sm text-gray-600">Timestamp: <span className="font-medium">{nft.timestamp}</span></p>
+              <p className="text-sm text-gray-600">Template: <span className="font-medium">{nft.metadataTemplate}</span></p>
+              <p className="text-sm text-gray-600">Additional Metadata: <span className="font-medium">{nft.additionalMetadata}</span></p>
+
+              <input
+                type="text"
+                value={comments[nft.tokenId] || ''}
+                onChange={(e) => setComments((prev) => ({ ...prev, [nft.tokenId]: e.target.value }))}
+                placeholder="Add comment"
+                className="w-full p-1 border rounded mt-2"
+              />
+
+              <div className="flex justify-between mt-2">
+                <button
+                  onClick={() => handleVerify(nft.tokenId, 1)}
+                  disabled={isPending}
+                  className={`px-3 py-1 bg-green-500 text-white rounded ${isPending ? 'opacity-50' : 'hover:bg-green-600'}`}
+                >
+                  {isPending ? 'Processing...' : 'Verify'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <p className="text-center">No unverified NFTs available</p>
       )}

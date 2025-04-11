@@ -41,56 +41,43 @@ function Marketplace() {
     return <div className="text-center text-red-500">Failed to load verified NFTs</div>;
   }
 
-  const nftList = verifiedNFTs?.map((nft, index) => {
-    const uriParts = nft.uri.split('|');
-    return {
-      key: index,
-      tokenId: nft.tokenId.toString(),
-      owner: nft.owner,
-      deviceId: nft.deviceId,
-      timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
-      dataType: nft.dataType,
-      location: nft.location,
-      metadataTemplate: uriParts[0] || '',
-      additionalMetadata: uriParts[1] || '',
-    };
-  }) || [];
+  const nftList =
+    verifiedNFTs?.map((nft, index) => {
+      const uriParts = nft.uri.split('|');
+      return {
+        key: index,
+        tokenId: nft.tokenId.toString(),
+        owner: nft.owner,
+        deviceId: nft.deviceId,
+        timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
+        dataType: nft.dataType,
+        location: nft.location,
+        metadataTemplate: uriParts[0] || '',
+        additionalMetadata: uriParts[1] || '',
+      };
+    }) || [];
 
   console.log('Verified NFT list:', nftList);
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl mb-4">Verified NFT Marketplace</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Verified NFT Marketplace</h1>
 
       {nftList.length > 0 ? (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2 border">Token ID</th>
-              <th className="p-2 border">Owner</th>
-              <th className="p-2 border">Device ID</th>
-              <th className="p-2 border">Data Type</th>
-              <th className="p-2 border">Location</th>
-              <th className="p-2 border">Timestamp</th>
-              <th className="p-2 border">Template</th>
-              <th className="p-2 border">Additional Metadata</th>
-            </tr>
-          </thead>
-          <tbody>
-            {nftList.map((nft) => (
-              <tr key={nft.key} className="hover:bg-gray-100">
-                <td className="p-2 border">{nft.tokenId}</td>
-                <td className="p-2 border">{nft.owner}</td>
-                <td className="p-2 border">{nft.deviceId}</td>
-                <td className="p-2 border">{nft.dataType}</td>
-                <td className="p-2 border">{nft.location}</td>
-                <td className="p-2 border">{nft.timestamp}</td>
-                <td className="p-2 border">{nft.metadataTemplate}</td>
-                <td className="p-2 border">{nft.additionalMetadata}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {nftList.map((nft) => (
+            <div key={nft.key} className="bg-white shadow-lg rounded-lg p-4 border">
+              <h2 className="text-lg font-semibold mb-2">Token ID: {nft.tokenId}</h2>
+              <p className="text-sm text-gray-600">Owner: <span className="font-medium">{nft.owner}</span></p>
+              <p className="text-sm text-gray-600">Device ID: <span className="font-medium">{nft.deviceId}</span></p>
+              <p className="text-sm text-gray-600">Data Type: <span className="font-medium">{nft.dataType}</span></p>
+              <p className="text-sm text-gray-600">Location: <span className="font-medium">{nft.location}</span></p>
+              <p className="text-sm text-gray-600">Timestamp: <span className="font-medium">{nft.timestamp}</span></p>
+              <p className="text-sm text-gray-600">Metadata Template: <span className="font-medium">{nft.metadataTemplate}</span></p>
+              <p className="text-sm text-gray-600">Additional Metadata: <span className="font-medium">{nft.additionalMetadata}</span></p>
+            </div>
+          ))}
+        </div>
       ) : (
         <p className="text-center">No verified NFTs available yet</p>
       )}

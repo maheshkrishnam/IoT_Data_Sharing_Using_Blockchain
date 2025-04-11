@@ -1,33 +1,46 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Menu } from "antd";
 import "@rainbow-me/rainbowkit/styles.css";
-import { icons } from "antd/es/image/PreviewGroup";
 import { useUserRole } from "../hooks/useUserRole";
 
 function Navbar() {
-  const items = [
-    { key: "templates", label: <Link to="/templates">Templates</Link> },
-    {
-      key: "generate-nft",
-      label: <Link to="/generate-nft">Generate NFT</Link>,
-    },
-    { key: "nfts", label: <Link to="/nfts">NFTs</Link> },
-    { key: "marketplace", label: <Link to="/marketplace">Marketplace</Link> },
-    { key: "verifier", label: <Link to="/verifier">Verifier</Link> },
-    { key: "admin", label: <Link to="/admin">Admin</Link> },
+  const { role, isConnected } = useUserRole();
+  const location = useLocation();
+
+  const navItems = [
+    { path: "/templates", label: "Templates" },
+    { path: "/generate-nft", label: "Generate NFT" },
+    { path: "/nfts", label: "NFTs" },
+    { path: "/marketplace", label: "Marketplace" },
+    { path: "/verifier", label: "Verifier" },
+    { path: "/admin", label: "Admin" },
   ];
 
-  const { role, isConnected } = useUserRole();
-
   return (
-    <div className="flex items-center justify-between p-4 bg-white shadow">
-      <Menu mode="horizontal" items={items} className="flex-1" />
-      {isConnected && (
-        <div className="bg-red-200  px-2 py-1 rounded-lg mr-2"> {role} </div>
-      )}
-      <ConnectButton chainStatus={icons} accountStatus="avatar" />
-    </div>
+    <nav className="flex items-center justify-between p-4 bg-white shadow-md">
+      <div className="flex space-x-6">
+        {navItems.map(({ path, label }) => (
+          <Link
+            key={path}
+            to={path}
+            className={`text-gray-700 hover:text-blue-500 transition-all ${
+              location.pathname === path ? "text-blue-500 font-semibold border-b-2 border-blue-500" : ""
+            }`}
+          >
+            {label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="flex items-center space-x-4">
+        {isConnected && (
+          <span className="bg-red-200 px-3 py-1 rounded-lg text-sm font-medium">
+            {role}
+          </span>
+        )}
+        <ConnectButton chainStatus="icon" accountStatus="avatar" />
+      </div>
+    </nav>
   );
 }
 
