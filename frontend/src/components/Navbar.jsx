@@ -1,31 +1,27 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useRole } from "../hooks/useRole.js";
+import { Link } from 'react-router-dom';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Menu } from 'antd';
+import '@rainbow-me/rainbowkit/styles.css';
+import { icons } from 'antd/es/image/PreviewGroup';
 
-export default function Navbar() {
-  const { isAdmin, isDevice, isVerifier, isBuyer, isConnected } = useRole();
+
+function Navbar() {
+  const items = [
+    { key: 'dashboard', label: <Link to="/">Dashboard</Link> },
+    { key: 'templates', label: <Link to="/templates">Templates</Link> },
+    { key: 'generate-nft', label: <Link to="/generate-nft">Generate NFT</Link> },
+    { key: 'nfts', label: <Link to="/nfts">NFTs</Link> },
+    { key: 'marketplace', label: <Link to="/marketplace">Marketplace</Link> },
+    { key: 'sales', label: <Link to="/sales">Sales</Link> },
+    { key: 'admin', label: <Link to="/admin">Admin</Link> },
+  ];
 
   return (
-    <nav className="bg-gray-800 p-4 text-white">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-bold">IoT Data NFT</h1>
-        <div className="flex items-center space-x-4">
-          {isConnected && (
-            <span>
-              Role:{" "}
-              {isAdmin
-                ? "Admin"
-                : isDevice
-                ? "Device"
-                : isVerifier
-                ? "Verifier"
-                : isBuyer
-                ? "Buyer"
-                : "Common"}
-            </span>
-          )}
-          <ConnectButton />
-        </div>
-      </div>
-    </nav>
+    <div className="flex items-center justify-between p-4 bg-white shadow">
+      <Menu mode="horizontal" items={items} className="flex-1" />
+      <ConnectButton chainStatus={icons} accountStatus="avatar" />
+    </div>
   );
 }
+
+export default Navbar;

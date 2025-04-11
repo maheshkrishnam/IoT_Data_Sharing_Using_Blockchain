@@ -1,13 +1,28 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Templates from './pages/Templates';
+import GenerateNFT from './pages/GenerateNFT';
+import NFTs from './pages/NFTs';
+import Marketplace from './pages/Marketplace';
+import Sales from './pages/Sales';
+import Admin from './pages/Admin';
 
-export default function App() {
+function App() {
   return (
-    <Router>
+    <Layout>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/templates" element={<Templates />} />
+        <Route path="/generate-nft" element={<GenerateNFT />} />
+        <Route path="/nfts" element={<NFTs />} />
+        <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/sales" element={<Sales />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
-    </Router>
+    </Layout>
   );
 }
+
+export default App;

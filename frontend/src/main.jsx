@@ -1,24 +1,25 @@
 import React from "react";
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { wagmiConfig, localhostChain } from './config/wagmiConfig';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import { wagmiClient, chains } from "./wagmi";
 import "./index.css";
-import '@rainbow-me/rainbowkit/styles.css';
 
 const queryClient = new QueryClient();
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <WagmiProvider config={wagmiConfig}>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <WagmiProvider config={wagmiClient}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider chains={[localhostChain]}>
-          <App />
+        <RainbowKitProvider chains={chains}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
-  </StrictMode>,
-)
+  </React.StrictMode>
+);

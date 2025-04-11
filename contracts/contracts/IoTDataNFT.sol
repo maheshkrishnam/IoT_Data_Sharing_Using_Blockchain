@@ -161,6 +161,42 @@ contract IoTDataNFT is ERC721, ERC721URIStorage {
         return out;
     }
 
+    function getOwnedNFTs(address owner) public view returns (TokenInfo[] memory) {
+        uint256 balance = balanceOf(owner);
+        TokenInfo[] memory ownedTokens = new TokenInfo[](balance);
+        uint256 index = 0;
+        for (uint256 i = 0; i < _allTokens.length; i++) {
+            uint256 tokenId = _allTokens[i];
+            if (ownerOf(tokenId) == owner) {
+                ownedTokens[index] = _buildInfo(tokenId);
+                index++;
+            }
+        }
+        return ownedTokens;
+    }
+
+    function getNFTDetails(uint256 tokenId) public view returns (TokenInfo memory) {
+        require(_isValidToken(tokenId), "Invalid token ID");
+        return _buildInfo(tokenId);
+    }
+
+    function getAllNFTs() public view returns (TokenInfo[] memory) {
+        TokenInfo[] memory allNFTs = new TokenInfo[](_allTokens.length);
+        for (uint256 i = 0; i < _allTokens.length; i++) {
+            allNFTs[i] = _buildInfo(_allTokens[i]);
+        }
+        return allNFTs;
+    }
+
+    function getTokensByDevice(string memory deviceId) public view returns (TokenInfo[] memory) {
+        uint256[] memory tokenIds = _tokensByDevice[deviceId];
+        TokenInfo[] memory deviceTokens = new TokenInfo[](tokenIds.length);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            deviceTokens[i] = _buildInfo(tokenIds[i]);
+        }
+        return deviceTokens;
+    }
+
     function _isValidToken(uint256 tokenId) internal view returns (bool) {
         return _ownerOf(tokenId) != address(0);
     }

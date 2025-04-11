@@ -13,6 +13,7 @@
     "@rainbow-me/rainbowkit": "^2.2.4",
     "@tailwindcss/vite": "^4.1.3",
     "@tanstack/react-query": "^5.71.10",
+    "antd": "^5.24.6",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
     "react": "^19.0.0",
