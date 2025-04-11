@@ -47,10 +47,5 @@ export function useUserRole() {
       : 'common'
     : null;
 
-  console.log('isAdmin:', isAdmin);
-  console.log('isVerifier:', isVerifier);
-  console.log('isDevice:', isDevice);
-  console.log('isBuyer:', isBuyer);
-
   return { role, isConnected, address };
 }

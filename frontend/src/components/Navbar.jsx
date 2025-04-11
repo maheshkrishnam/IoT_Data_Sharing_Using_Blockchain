@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Menu } from 'antd';
 import '@rainbow-me/rainbowkit/styles.css';
 import { icons } from 'antd/es/image/PreviewGroup';
+import { useUserRole } from '../hooks/useUserRole';
 
 
 function Navbar() {
@@ -16,9 +17,12 @@ function Navbar() {
     { key: 'admin', label: <Link to="/admin">Admin</Link> },
   ];
 
+  const { role, isConnected } = useUserRole();
+
   return (
     <div className="flex items-center justify-between p-4 bg-white shadow">
       <Menu mode="horizontal" items={items} className="flex-1" />
+      <div className='bg-red-200  px-2 py-1 rounded-lg mr-2'> {role} </div>
       <ConnectButton chainStatus={icons} accountStatus="avatar" />
     </div>
   );

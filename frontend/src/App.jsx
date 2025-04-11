@@ -8,6 +8,7 @@ import NFTs from './pages/NFTs';
 import Marketplace from './pages/Marketplace';
 import Sales from './pages/Sales';
 import Admin from './pages/Admin';
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/sales" element={<Sales />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
+      <Toaster position="bottom-right" />
     </Layout>
   );
 }
