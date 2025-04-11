@@ -15,7 +15,7 @@ function Templates() {
     enabled: role === 'admin',
   });
 
-  const { write: createNewTemplate, isPending, error } = useContractWrite({
+  const { write: createNewTemplate, isPending } = useContractWrite({
     contractName: 'IoTDataFactory',
     functionName: 'createTemplate',
   });
@@ -34,18 +34,14 @@ function Templates() {
       return;
     }
 
-    // Convert to wei (1 ether = 10^18 wei)
-    const basePriceWei = BigInt(basePriceNum * 10**18);
-
     console.log('Calling createTemplate with:', {
       dataType: normalizedDataType,
       metadataTemplate: metadataTemplate,
-      basePrice: basePriceWei.toString(),
+      basePrice: basePriceNum.toString(),
     });
 
-    // Call contract with proper argument format
     createNewTemplate(
-      [normalizedDataType, metadataTemplate, basePriceWei],
+      [normalizedDataType, metadataTemplate, basePriceNum],
       {
         onSuccess: () => {
           toast.success('Template created successfully');

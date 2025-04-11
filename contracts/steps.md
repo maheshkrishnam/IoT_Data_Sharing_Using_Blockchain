@@ -109,9 +109,12 @@ tokenId = event.args[0];
 
 ## Get detail about NFT
 ```bash
+await IoTDataNFT.getNFTDetails(tokenId);
+await IoTDataNFT.getAllNFTs();
 await IoTDataNFT.getAllVerifiedNFTs();
 await IoTDataNFT.getAllUnverifiedNFTs();
 await IoTDataNFT.tokenURI(tokenId);
+await IoTDataNFT.getOwnedNFTs(user1.address);
 ```
 
 ## Data verification
