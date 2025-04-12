@@ -30,6 +30,16 @@ function Admin() {
     functionName: 'grantVerifierRole',
   });
 
+  const { write: revokeDevice } = useContractWrite({
+    contractName: 'IoTDataAccessControl',
+    functionName: 'revokeDeviceRole',
+  });
+
+  const { write: revokeVerifier } = useContractWrite({
+    contractName: 'IoTDataAccessControl',
+    functionName: 'revokeVerifierRole',
+  });
+
   const handleGrantDevice = () => {
     if (!deviceAddress) {
       toast.error('Please enter a device address');
@@ -54,6 +64,30 @@ function Admin() {
     setVerifierAddress('');
   };
 
+  const handleRevokeDevice = () => {
+    if (!deviceAddress) {
+      toast.error('Please enter a device address');
+      return;
+    }
+    revokeDevice([deviceAddress], {
+      onSuccess: () => toast.success('Device role revoked'),
+      onError: (error) => toast.error(`Error: ${error.message}`),
+    });
+    setDeviceAddress('');
+  };
+
+  const handleRevokeVerifier = () => {
+    if (!verifierAddress) {
+      toast.error('Please enter a verifier address');
+      return;
+    }
+    revokeVerifier([verifierAddress], {
+      onSuccess: () => toast.success('Verifier role revoked'),
+      onError: (error) => toast.error(`Error: ${error.message}`),
+    });
+    setVerifierAddress('');
+  };
+
   if (!isConnected) {
     return <div className="text-center text-red-500">Please connect your wallet</div>;
   }
@@ -67,7 +101,7 @@ function Admin() {
       <h1 className="text-2xl font-semibold mb-4">Admin Panel</h1>
 
       <div className="mb-6">
-        <h2 className="text-xl font-medium mb-2">Grant Device Role</h2>
+        <h2 className="text-xl font-medium mb-2">Device Role</h2>
         <div className="flex gap-2">
           <input
             type="text"
@@ -82,11 +116,17 @@ function Admin() {
           >
             Grant
           </button>
+          <button
+            onClick={handleRevokeDevice}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Revoke
+          </button>
         </div>
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-medium mb-2">Grant Verifier Role</h2>
+        <h2 className="text-xl font-medium mb-2">Verifier Role</h2>
         <div className="flex gap-2">
           <input
             type="text"
@@ -100,6 +140,12 @@ function Admin() {
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Grant
+          </button>
+          <button
+            onClick={handleRevokeVerifier}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Revoke
           </button>
         </div>
       </div>
