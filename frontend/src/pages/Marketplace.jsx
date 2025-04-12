@@ -31,10 +31,27 @@ function Marketplace() {
     }
   }, [nftAddress]);
 
+  const openData = (ipfsUrl) => {
+    if (!ipfsUrl) {
+      toast.error("No data available");
+      return;
+    }
+
+    try {
+      // Open the IPFS URL in a new tab
+      window.open(ipfsUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Error opening IPFS data:", error);
+      toast.error(`Failed to open data: ${error.message}`);
+    }
+  };
+
   if (!isConnected) {
-    <div className="text-center text-red-500 text-2xl pt-10">
-      Please connect your wallet
-    </div>;
+    return (
+      <div className="text-center text-red-500 text-2xl pt-10">
+        Please connect your wallet
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -80,7 +97,7 @@ function Marketplace() {
           {nftList.map((nft) => (
             <div
               key={nft.key}
-              className="bg-gray-600 text-gray-100 shadow-lg rounded-lg p-4 border"
+              className="bg-gray-600 text-gray-100 shadow-lg rounded-lg p-4 border min-w-[280px] max-w-sm"
             >
               <h2 className="text-lg font-semibold mb-2">
                 Token ID: {nft.tokenId}
@@ -104,9 +121,16 @@ function Marketplace() {
                 Metadata Template:{" "}
                 <span className="font-medium">{nft.metadataTemplate}</span>
               </p>
-              <p className="text-sm">
-                Additional Metadata:{" "}
-                <span className="font-medium">{nft.additionalMetadata}</span>
+              <p className="text-sm"> Metadata:
+                <button
+                  onClick={() => openData(nft.additionalMetadata)}
+                  className={`text-blue-500 hover:underline ${
+                    !nft.additionalMetadata ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={!nft.additionalMetadata}
+                >
+                  Get Data
+                </button>
               </p>
             </div>
           ))}

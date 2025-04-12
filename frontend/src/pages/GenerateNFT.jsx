@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { useUserRole } from "../hooks/useUserRole";
-import { useContractRead, useContractWrite } from "../hooks/useContracts";
-import toast from "react-hot-toast";
+import { useState } from 'react';
+import { useUserRole } from '../hooks/useUserRole';
+import { useContractRead, useContractWrite } from '../hooks/useContracts';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+
+// Replace these with your actual Pinata API keys or use environment variables
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
+const PINATA_API_SECRET = import.meta.env.VITE_PINATA_API_SECRET;
 
 function DeviceNFT() {
   const { isDevice, isConnected } = useUserRole();
-  const [deviceId, setDeviceId] = useState("");
-  const [dataType, setDataType] = useState("");
-  const [location, setLocation] = useState("");
-  const [additionalMetadata, setAdditionalMetadata] = useState("");
+  const [deviceId, setDeviceId] = useState('');
+  const [dataType, setDataType] = useState('');
+  const [location, setLocation] = useState('');
+  const [file, setFile] = useState(null);
+  const [ipfsUrl, setIpfsUrl] = useState(''); // Direct file content URL, not shown in UI
 
   const { data: templates } = useContractRead({
     contractName: "IoTDataFactory",
@@ -21,9 +27,15 @@ function DeviceNFT() {
     functionName: "generateDataNFT",
   });
 
-  const handleGenerateNFT = () => {
-    if (!deviceId || !dataType || !location || !additionalMetadata) {
-      toast.error("Please fill in all fields");
+  const handleUploadAndGenerate = async () => {
+    // Validate form fields
+    if (!deviceId || !dataType || !location) {
+      toast.error('Please fill in Device ID, Data Type, and Location');
+      return;
+    }
+
+    if (!file) {
+      toast.error('Please upload a file');
       return;
     }
 
@@ -35,27 +47,51 @@ function DeviceNFT() {
       return;
     }
 
-    const args = [
-      deviceId,
-      dataType.toLowerCase(),
-      location,
-      additionalMetadata,
-    ];
+    try {
+      // Step 1: Upload file to IPFS
+      toast.loading('Uploading to IPFS...');
+      const formData = new FormData();
+      formData.append('file', file);
 
-    generateNFT(args, {
-      onSuccess: (tx) => {
-        console.log("Transaction successful:", tx);
-        toast.success("NFT generated successfully");
-        setDeviceId("");
-        setDataType("");
-        setLocation("");
-        setAdditionalMetadata("");
-      },
-      onError: (err) => {
-        console.error("Transaction error:", err);
-        toast.error(`Error: ${err.message}`);
-      },
-    });
+      const fileResponse = await axios.post(
+        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        formData,
+        {
+          headers: {
+            'pinata_api_key': PINATA_API_KEY,
+            'pinata_secret_api_key': PINATA_API_SECRET,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      const fileCid = fileResponse.data.IpfsHash;
+      const fileUrl = `https://gateway.pinata.cloud/ipfs/${fileCid}`;
+      setIpfsUrl(fileUrl); // Store direct file URL internally
+      toast.dismiss();
+      toast.success('File uploaded to IPFS successfully!');
+
+      // Step 2: Generate NFT
+      const args = [deviceId, dataType.toLowerCase(), location, fileUrl];
+      generateNFT(args, {
+        onSuccess: () => {
+          toast.success('NFT generated successfully!');
+          // Reset form
+          setDeviceId('');
+          setDataType('');
+          setLocation('');
+          setFile(null);
+          setIpfsUrl('');
+        },
+        onError: (err) => {
+          toast.error(`NFT generation failed: ${err.message}`);
+        },
+      });
+    } catch (error) {
+      console.error('IPFS upload error:', error);
+      toast.dismiss();
+      toast.error(`Upload failed: ${error.message}`);
+    }
   };
 
   if (!isConnected) {
@@ -73,6 +109,10 @@ function DeviceNFT() {
       </div>
     );
   }
+
+  const isFormValid = deviceId && dataType && location;
+  const hasDataForUpload = file;
+  const isButtonDisabled = isPending || !isFormValid || !hasDataForUpload;
 
   return (
     <div className="pt-10 max-w-3xl m-auto">
@@ -108,25 +148,26 @@ function DeviceNFT() {
           className="bg-gray-600 text-gray-100 p-2 border rounded"
         />
 
-        <textarea
-          rows={5}
-          type="text"
-          placeholder="Data"
-          value={additionalMetadata}
-          onChange={(e) => setAdditionalMetadata(e.target.value)}
-          className="bg-gray-600 text-gray-100 p-2 border rounded"
-        />
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Upload a file:</label>
+          <input
+            type="file"
+            onChange={(e) => {
+              setFile(e.target.files[0]);
+              setIpfsUrl(''); // Reset file URL when new file is selected
+            }}
+            className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
         <button
-          onClick={handleGenerateNFT}
-          disabled={isPending}
-          className={`p-2  rounded transition ${
-            isPending
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
+          onClick={handleUploadAndGenerate}
+          disabled={isButtonDisabled}
+          className={`p-2 text-white rounded transition ${
+            isButtonDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
-          {isPending ? "Generating..." : "Generate NFT"}
+          {isPending ? 'Processing...' : 'Generate NFT'}
         </button>
       </div>
     </div>

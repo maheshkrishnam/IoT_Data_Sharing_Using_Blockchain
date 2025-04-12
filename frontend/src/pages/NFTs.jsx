@@ -33,6 +33,21 @@ function DeviceNFTs() {
     }
   }, [nftAddress]);
 
+  const openData = (ipfsUrl) => {
+    if (!ipfsUrl) {
+      toast.error("No data available");
+      return;
+    }
+
+    try {
+      // Open the IPFS URL in a new tab
+      window.open(ipfsUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Error opening IPFS data:", error);
+      toast.error(`Failed to open data: ${error.message}`);
+    }
+  };
+
   if (!isConnected) {
     return (
       <div className="text-center text-red-500 text-2xl pt-10">
@@ -93,7 +108,17 @@ function DeviceNFTs() {
               <p className="text-sm">Location: {nft.location}</p>
               <p className="text-sm">Timestamp: {nft.timestamp}</p>
               <p className="text-sm">Template: {nft.metadataTemplate}</p>
-              <p className="text-sm">Metadata: {nft.additionalMetadata}</p>
+              <p className="text-sm"> Metadata: 
+                <button
+                  onClick={() => openData(nft.additionalMetadata)}
+                  className={`text-blue-500 hover:underline ${
+                    !nft.additionalMetadata ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={!nft.additionalMetadata}
+                >
+                  Get Data
+                </button>
+              </p>
             </div>
           ))}
         </div>

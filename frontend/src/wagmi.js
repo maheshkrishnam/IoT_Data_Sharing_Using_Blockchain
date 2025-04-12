@@ -28,6 +28,6 @@ export const wagmiClient = createConfig({
   connectors: [injected()],
   transports: {
     [localhost.id]: http('http://127.0.0.1:8545'),
-    [sepolia.id]: http(`https://sepolia.infura.io/v3/${import.meta.env.VITE_INFURA_PROJECT_ID}`),
+    [sepolia.id]: http(``),
   },
 });
