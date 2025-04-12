@@ -91,7 +91,7 @@ function Templates() {
             />
             <textarea
               rows={5}
-              placeholder="Metadata Template"
+              placeholder="Metadata Template (JSON format)"
               value={metadataTemplate}
               onChange={(e) => setMetadataTemplate(e.target.value)}
               className="bg-gray-600 text-gray-100 w-full p-3 border rounded-lg"

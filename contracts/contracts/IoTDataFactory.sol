@@ -4,12 +4,10 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IoTDataNFT.sol";
 import "./IoTDataAccessControl.sol";
-// import "./DataVerification.sol";
 
 contract IoTDataFactory is Ownable {
     IoTDataNFT public immutable nftContract;
     IoTDataAccessControl public immutable accessControl;
-    // DataVerification public immutable verificationContract;
 
     struct DataTemplate {
         string dataType;
@@ -45,7 +43,6 @@ contract IoTDataFactory is Ownable {
 
         nftContract = IoTDataNFT(nftAddress);
         accessControl = IoTDataAccessControl(accessControlAddress);
-        // verificationContract = DataVerification(payable(verificationAddress));
     }
 
     function createTemplate(
