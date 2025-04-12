@@ -8,23 +8,25 @@ function Navbar() {
   const location = useLocation();
 
   const navItems = [
+    { path: "/", label: "Admin" },
     { path: "/templates", label: "Templates" },
     { path: "/generate-nft", label: "Generate NFT" },
     { path: "/nfts", label: "NFTs" },
     { path: "/marketplace", label: "Marketplace" },
     { path: "/verifier", label: "Verifier" },
-    { path: "/", label: "Admin" },
   ];
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-white shadow-md">
-      <div className="flex space-x-6">
+    <nav className="w-full bg-gray-900  flex flex-col justify-between p-6">
+      <div className="space-y-4">
         {navItems.map(({ path, label }) => (
           <Link
             key={path}
             to={path}
-            className={`text-gray-700 hover:text-blue-500 transition-all ${
-              location.pathname === path ? "text-blue-500 font-semibold border-b-2 border-blue-500" : ""
+            className={`block px-3 py-2 rounded-md transition-all ${
+              location.pathname === path
+                ? "bg-blue-600  font-semibold"
+                : "text-gray-300 hover:bg-gray-700 hover:"
             }`}
           >
             {label}
@@ -32,9 +34,9 @@ function Navbar() {
         ))}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="space-y-2 pt-6 border-t border-gray-700">
         {isConnected && (
-          <span className="bg-red-200 px-3 py-1 rounded-lg text-sm font-medium">
+          <span className="bg-red-500  px-3 py-1 rounded-full text-sm font-medium inline-block">
             {role}
           </span>
         )}

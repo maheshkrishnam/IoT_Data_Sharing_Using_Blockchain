@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useUserRole } from '../hooks/useUserRole';
-import { useContractRead } from '../hooks/useContracts';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { useUserRole } from "../hooks/useUserRole";
+import { useContractRead } from "../hooks/useContracts";
+import toast from "react-hot-toast";
 
 function DeviceNFTs() {
   const { role, isDevice, isConnected } = useUserRole();
@@ -10,16 +10,20 @@ function DeviceNFTs() {
   const [nftContractAddress, setNftContractAddress] = useState(null);
 
   const { data: nftAddress } = useContractRead({
-    contractName: 'IoTDataFactory',
-    functionName: 'nftContract',
+    contractName: "IoTDataFactory",
+    functionName: "nftContract",
     enabled: isConnected,
   });
 
-  const { data: ownedNFTs, isLoading, error } = useContractRead({
-    contractName: 'IoTDataNFT',
-    functionName: 'getOwnedNFTs',
+  const {
+    data: ownedNFTs,
+    isLoading,
+    error,
+  } = useContractRead({
+    contractName: "IoTDataNFT",
+    functionName: "getOwnedNFTs",
     args: [address],
-    enabled: !!nftContractAddress && !!address && role === 'device',
+    enabled: !!nftContractAddress && !!address && role === "device",
     address: nftContractAddress,
   });
 
@@ -30,11 +34,19 @@ function DeviceNFTs() {
   }, [nftAddress]);
 
   if (!isConnected) {
-    return <div className="text-center text-red-500">Please connect your wallet</div>;
+    return (
+      <div className="text-center text-red-500 text-2xl pt-10">
+        Please connect your wallet
+      </div>
+    );
   }
 
   if (!isDevice) {
-    return <div className="text-center text-red-500">Only devices can access this page</div>;
+    return (
+      <div className="text-center text-red-500 text-2xl pt-10">
+        Only devices can access this page
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -43,13 +55,13 @@ function DeviceNFTs() {
 
   if (error) {
     toast.error(`Error fetching NFTs: ${error.message}`);
-    console.error('NFT fetch error:', error);
+    console.error("NFT fetch error:", error);
     return <div className="text-center text-red-500">Failed to load NFTs</div>;
   }
 
   const nftList =
     ownedNFTs?.map((nft, index) => {
-      const uriParts = nft.uri.split('|');
+      const uriParts = nft.uri.split("|");
       return {
         key: index,
         tokenId: nft.tokenId.toString(),
@@ -57,31 +69,38 @@ function DeviceNFTs() {
         timestamp: new Date(Number(nft.timestamp) * 1000).toLocaleString(),
         dataType: nft.dataType,
         location: nft.location,
-        metadataTemplate: uriParts[0] || '',
-        additionalMetadata: uriParts[1] || '',
+        metadataTemplate: uriParts[0] || "",
+        additionalMetadata: uriParts[1] || "",
       };
     }) || [];
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl mb-4 font-semibold">Your Generated NFTs</h1>
+      <h1 className="text-2xl mb-4 font-semibold w-full">
+        Your Generated NFTs
+      </h1>
 
       {nftList.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {nftList.map((nft) => (
-            <div key={nft.key} className="p-4 border rounded-lg shadow-md bg-white">
+            <div
+              key={nft.key}
+              className="flex-1 min-w-[280px] max-w-sm p-4 border rounded-lg shadow-md bg-gray-600 text-gray-100"
+            >
               <p className="text-lg font-semibold">Token ID: {nft.tokenId}</p>
-              <p className="text-sm text-gray-600">Device ID: {nft.deviceId}</p>
-              <p className="text-sm text-gray-600">Data Type: {nft.dataType}</p>
-              <p className="text-sm text-gray-600">Location: {nft.location}</p>
-              <p className="text-sm text-gray-600">Timestamp: {nft.timestamp}</p>
-              <p className="text-sm text-gray-600">Template: {nft.metadataTemplate}</p>
-              <p className="text-sm text-gray-600">Metadata: {nft.additionalMetadata}</p>
+              <p className="text-sm">Device ID: {nft.deviceId}</p>
+              <p className="text-sm">Data Type: {nft.dataType}</p>
+              <p className="text-sm">Location: {nft.location}</p>
+              <p className="text-sm">Timestamp: {nft.timestamp}</p>
+              <p className="text-sm">Template: {nft.metadataTemplate}</p>
+              <p className="text-sm">Metadata: {nft.additionalMetadata}</p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-700">No NFTs found for this device</p>
+        <p className="text-center text-gray-700">
+          No NFTs found for this device
+        </p>
       )}
     </div>
   );
