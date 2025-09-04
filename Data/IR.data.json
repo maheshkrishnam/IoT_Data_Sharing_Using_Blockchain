@@ -1,0 +1,8 @@
+{
+  "device_id": "ir_sensor_301",
+  "timestamp": "2025-04-12T14:30:00Z",
+  "motion_detected": true,
+  "detection_distance_cm": 75,
+  "location": "Hallway 1",
+  "status": "OK"
+}

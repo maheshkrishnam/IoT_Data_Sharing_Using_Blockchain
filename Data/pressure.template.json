@@ -1,0 +1,7 @@
+{
+  "device_id": "<string, unique identifier for the device>",
+  "timestamp": "<ISO 8601 datetime format, e.g. 2025-04-12T14:30:00Z>",
+  "pressure_pascal": "<number, pressure in Pascals>",
+  "location": "<string, optional location name or code>",
+  "status": "<string, device status e.g. 'OK', 'ERROR', 'OFFLINE'>"
+}

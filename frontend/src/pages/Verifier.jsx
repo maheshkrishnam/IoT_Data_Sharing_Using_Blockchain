@@ -106,39 +106,49 @@ function VerifierNFTs() {
       <h1 className="text-2xl font-bold mb-6 text-center">Verify NFTs</h1>
 
       {nftList.length > 0 ? (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {nftList.map((nft) => (
             <div
               key={nft.key}
-              className="bg-gray-600 text-gray-100 shadow-lg rounded-lg p-4 border min-w-[280px] max-w-sm"
+              className="bg-gray-600 text-gray-100 shadow-lg rounded-lg p-4 border w-full"
             >
-              <h2 className="text-lg font-semibold mb-2">
+              <h2 className="text-lg font-semibold mb-2 break-words whitespace-normal overflow-hidden">
                 Token ID: {nft.tokenId}
               </h2>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Owner: <span className="font-medium">{nft.owner}</span>
               </p>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Device ID: <span className="font-medium">{nft.deviceId}</span>
               </p>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Data Type: <span className="font-medium">{nft.dataType}</span>
               </p>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Location: <span className="font-medium">{nft.location}</span>
               </p>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Timestamp: <span className="font-medium">{nft.timestamp}</span>
               </p>
-              <p className="text-sm">
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
                 Template:{" "}
                 <span className="font-medium">{nft.metadataTemplate}</span>
               </p>
-              <p className="text-sm"> Metadata:
+
+              <p className="text-sm break-words whitespace-normal overflow-hidden">
+                Metadata:{" "}
                 <button
                   onClick={() => openData(nft.additionalMetadata)}
                   className={`text-blue-500 hover:underline ${
-                    !nft.additionalMetadata ? "opacity-50 cursor-not-allowed" : ""
+                    !nft.additionalMetadata
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                   disabled={!nft.additionalMetadata}
                 >

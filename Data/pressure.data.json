@@ -1,0 +1,7 @@
+{
+  "device_id": "pressure_sensor_007",
+  "timestamp": "2025-04-12T14:30:00Z",
+  "pressure_pascal": 101325,
+  "location": "Boiler Room 2",
+  "status": "OK"
+}
