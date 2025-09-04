@@ -4,7 +4,6 @@ import { useContractRead, useContractWrite } from '../hooks/useContracts';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
-// Replace these with your actual Pinata API keys or use environment variables
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_API_SECRET = import.meta.env.VITE_PINATA_API_SECRET;
 
@@ -14,7 +13,7 @@ function DeviceNFT() {
   const [dataType, setDataType] = useState('');
   const [location, setLocation] = useState('');
   const [file, setFile] = useState(null);
-  const [ipfsUrl, setIpfsUrl] = useState(''); // Direct file content URL, not shown in UI
+  const [ipfsUrl, setIpfsUrl] = useState(''); 
 
   const { data: templates } = useContractRead({
     contractName: "IoTDataFactory",
@@ -28,7 +27,6 @@ function DeviceNFT() {
   });
 
   const handleUploadAndGenerate = async () => {
-    // Validate form fields
     if (!deviceId || !dataType || !location) {
       toast.error('Please fill in Device ID, Data Type, and Location');
       return;
@@ -48,7 +46,6 @@ function DeviceNFT() {
     }
 
     try {
-      // Step 1: Upload file to IPFS
       toast.loading('Uploading to IPFS...');
       const formData = new FormData();
       formData.append('file', file);
@@ -67,16 +64,14 @@ function DeviceNFT() {
 
       const fileCid = fileResponse.data.IpfsHash;
       const fileUrl = `https://gateway.pinata.cloud/ipfs/${fileCid}`;
-      setIpfsUrl(fileUrl); // Store direct file URL internally
+      setIpfsUrl(fileUrl); 
       toast.dismiss();
       toast.success('File uploaded to IPFS successfully!');
 
-      // Step 2: Generate NFT
       const args = [deviceId, dataType.toLowerCase(), location, fileUrl];
       generateNFT(args, {
         onSuccess: () => {
           toast.success('NFT generated successfully!');
-          // Reset form
           setDeviceId('');
           setDataType('');
           setLocation('');
@@ -154,7 +149,7 @@ function DeviceNFT() {
             type="file"
             onChange={(e) => {
               setFile(e.target.files[0]);
-              setIpfsUrl(''); // Reset file URL when new file is selected
+              setIpfsUrl(''); 
             }}
             className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />

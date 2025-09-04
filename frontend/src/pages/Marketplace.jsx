@@ -38,7 +38,6 @@ function Marketplace() {
     }
 
     try {
-      // Open the IPFS URL in a new tab
       window.open(ipfsUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error("Error opening IPFS data:", error);

@@ -1,3 +1,5 @@
+# Hardhat playground functions for localhost
+
 # Steps:
 ## Make a node on hardhat:
 ```bash

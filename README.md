@@ -1,5 +1,11 @@
 # IoT Data sharing using Blockchain
-- In this project we have implemented a marketplace where a device can register its data in form of NFT and other users can use it from there
+- In this project we have implemented a marketplace where a device can upload its data in form of NFT and other users can use it
+
+## Requirements
+### Must
+- Node.js
+- Metamask setup
+
 
 ## Installation
 - Get the repo
@@ -15,8 +21,45 @@ npm install
 ```
 - Now you have all the dependencies
 
+## Environment variable setup
+> Now lets setup your environement variables (env in frontend and contracts)
+  - This will be the template for your env
+
+### For Frontend
+- You will get these addresses when you will deploy the contracts (Deployment section)
+- You will have to login to pinata and get the `VITE_PINATA_API_KEY` and `VITE_PINATA_API_SECRET`
+```
+VITE_PINATA_API_KEY =
+VITE_PINATA_API_SECRET =
+VITE_ACCESS_CONTROL_ADDRESS = 0x...
+VITE_MARKETPLACE_ADDRESS = 0x...
+VITE_IOT_DATA_NFT_ADDRESS = 0x...
+VITE_DATA_VERIFICATION_ADDRESS = 0x...
+VITE_PAYMENT_ADDRESS = 0x...
+VITE_IOT_DATA_FACTORY_ADDRESS = 0x...
+VITE_INFURA_PROJECT_ID =
+```
+
+### For Contracts
+- Only when using sepolia for deployment
+- If you are using testnet then sign in on `infura` and `ethersacn` to get these keys
+- Private key will be private key of your metamask sepolia testnet account from which you want to deploy this contract
+```
+PRIVATE_KEY = 0x...
+INFURA_PROJECT_ID =
+ETHERSCAN_API_KEY =
+```
+
+- Now you have done the setup of both .env
+
+## Configuration
+### Localhost
+- Comment out or remove the `sepolia` portion in `wagmi.js` inside `src` folder
+- Comment out or remove `sepolia` and `etherscan` from hardhat.config.js
+
+
 ## Contract Deployment
-> After running this command in terminal you will get `addresses` for each contract which you have to set in `Frontend .env`
+> After running below command in terminal of contracts folder you will get `addresses` for each contract which you have to set in `Frontend .env`
 #### Localhost
 ```
 npx hardhat node
@@ -32,42 +75,74 @@ npx hardhat run scripts/deploy.js --network localhost
 npx hardhat run scripts/deploy.js --network seplolia
 ```
 
-### Setting up .env
-> Now lets setup your environement variables (env in frontend and contracts)
-  - This will be the template for your env
+### Finalizing .env
+- `Addresses` that you get after running the above script/deploy.js code, set them into the `frontend.env`
 
-#### For Frontend
-- You will get these addresses when you will deploy the contracts (Deployment section)
-```
-VITE_PINATA_API_KEY =
-VITE_PINATA_API_SECRET =
-VITE_ACCESS_CONTROL_ADDRESS = 0x...
-VITE_MARKETPLACE_ADDRESS = 0x...
-VITE_IOT_DATA_NFT_ADDRESS = 0x...
-VITE_DATA_VERIFICATION_ADDRESS = 0x...
-VITE_PAYMENT_ADDRESS = 0x...
-VITE_IOT_DATA_FACTORY_ADDRESS = 0x...
-VITE_INFURA_PROJECT_ID =
-```
-
-#### For Contracts
-- Only when using sepolia for deployment
-```
-PRIVATE_KEY = 0x...
-INFURA_PROJECT_ID =
-ETHERSCAN_API_KEY =
-```
-
-- Now you have done the setup of both .env
-
-## Configuration
-### Localhost
-- If you have not filed the .env files as instructed then comment out the portion asking for those variables.
 
 ## Frontend Deployment
+- Open new terminal in `frontend` folder
 ```
 npm run dev
 ```
-- Open link `http://localhost:5173/` to get frontend
+- Open link `http://localhost:5173/` to use the App
 
-- Now you can test this project
+
+## How to use the App
+
+- Connect to Metamask (localhost/sepolia based on your use case)
+- Connect to account which you have used to deploy the contract
+
+## Now you run the `IoT Data Marketplace` App
+
+---
+
+# IoT Data Sharing Using Blockchain - User Guide
+
+## Prerequisites
+- **MetaMask**: Installed and configured with the Sepolia testnet or localhost.
+- **Sepolia ETH**: Obtain test ETH from a faucet.
+
+## How to Use the Website
+### 1. Access the Website
+- Open link `http://localhost:5173/` to use the App
+
+### 2. Connect Wallet
+- Click the MetaMask icon in the bottom left corner.
+- Connect your wallet and connect to the desired network.
+- Ensure you have test ETH for gas fees to perform transactions.
+
+### 3. Admin Panel
+- **Access**: Only accounts with the `DEFAULT_ADMIN_ROLE` (e.g., the deployer address) can use this.
+- **Grant Roles**:
+  - Enter a device or verifier address in the input fields under "Device Management" or "Verifier Management".
+  - Click "Grant" to assign the role (e.g., `grantDeviceRole`).
+- **Revoke Roles**:
+  - Enter the address and click "Revoke" to remove the role (e.g., `revokeDeviceRole`).
+- **View Registered Members**:
+  - Check the "Registered Devices" and "Registered Verifiers" sections to see current lists.
+
+### 4. Device NFT Generation
+- **Access**: Only accounts with the `DEVICE_ROLE` can use this.
+- **Steps**:
+  - Navigate to the "Generate Data NFT" section.
+  - Enter a `Device ID`, select a `Data Type` from the dropdown, and input a `Location`.
+  - Upload a JSON file using the file input.
+  - Click "Generate NFT" to upload metadata to Pinata and mint the NFT.
+- **Result**: After success, and the NFT is created (initially unverified).
+
+### 5. Verifier NFT Verification
+- **Access**: Only accounts with the `VERIFIER_ROLE` can use this.
+- **Steps**:
+  - Navigate to a verifier interface.
+  - View a list of unverified NFTs generated by devices.
+  - Select an NFT, review its metadata (via the IPFS URL), and choose a verification status:
+    - Click "Approve" to set status to APPROVED.
+  - Confirm the transaction in MetaMask.
+- **Result**: Approved NFTs move to the marketplace; rejected NFTs are excluded.
+
+### 6. Marketplace Usage
+- **Access**: Open to all connected wallets (future buy/sell functionality pending).
+- **Steps**:
+  - Browse NFT details (e.g., name, description, attributes) fetched from IPFS and displayed via OpenSea integration.
+  - Currently, NFTs are viewable only; future updates will enable listing, buying, and selling.
+- **Result**: Users can explore verified IoT data NFTs, with potential for future transactions.
